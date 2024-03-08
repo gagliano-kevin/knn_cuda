@@ -1,5 +1,5 @@
 // *********** version with correct shared memory allocation ***********
-// *** parallel knnSortPredict kernel only in the first iteration *****
+// *** first version that try to improve knnSortPredict kernel *****
 
 
 //nvcc knn_parallel_sort.cu -o parallel
