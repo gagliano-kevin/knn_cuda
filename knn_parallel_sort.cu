@@ -1,3 +1,7 @@
+// ********* version with fixed size shared memory for distances and indexes *********
+
+
+
 //nvcc knn_parallel_sort.cu -o parallel
 #include <stdio.h>
 #include <stdlib.h>

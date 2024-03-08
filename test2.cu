@@ -1,3 +1,7 @@
+// *********** version with correct shared memory allocation ***********
+
+
+
 //nvcc knn_parallel_sort.cu -o parallel
 #include <stdio.h>
 #include <stdlib.h>
@@ -106,15 +110,12 @@ __device__ void bubbleSort(double *distances, int *indexes, int startIdx, int en
 __global__ void knnSortPredict(double *distances, int trainSize, int *indexes, int k, int *predictions, int *trainLabels, int sharedMemoryIdx) {
     int row = blockIdx.x;
     int portion = (int)trainSize / blockDim.x;
-    int lastPortion = 0;        // last portion of the dataset
-    // last thread block takes care of the remaining portion of the dataset
-    if(threadIdx.x == blockDim.x - 1){
-        lastPortion = trainSize - (blockDim.x - 1) * portion;
-    }
+
     int startIdx = row * trainSize + threadIdx.x * portion;
     int endIdx = startIdx + portion;
+    // last thread block takes care of the remaining portion of the dataset
     if(threadIdx.x == blockDim.x - 1){
-        endIdx = startIdx + lastPortion;
+        endIdx = startIdx + (trainSize - (blockDim.x - 1) * portion);
     }
 
     bubbleSort(distances, indexes, startIdx, endIdx);

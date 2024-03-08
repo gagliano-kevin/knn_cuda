@@ -1,3 +1,8 @@
+// ************ version with dynamic shared memory allocation ************
+// *********** bug in endIdx calculation for last thread in each block *********
+
+
+
 //nvcc knn_parallel_sort.cu -o parallel
 #include <stdio.h>
 #include <stdlib.h>
