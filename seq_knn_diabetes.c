@@ -11,7 +11,6 @@
 
 #define MAX_FIELD_LEN 20
 #define MAX_FIELDS 9
-#define NUM_FIELDS 6    // Id, SepalLengthCm, SepalWidthCm, PetalLengthCm, PetalWidthCm, Species
 #define FEATURES 8
 #define CLASSES 2
 
