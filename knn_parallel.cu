@@ -485,10 +485,10 @@ int mapSpeciesToClass(const char *species) {
 // Training set composed of all the dataset samples
 void createTrainingSet(IrisData *iris_data, double *trainData, int *trainLabels, int numSamples){
     for(int i = 0; i < numSamples; i++){
-        trainData[i*4] = iris_data[i].sepal_length;
-        trainData[i*4+1] = iris_data[i].sepal_width;
-        trainData[i*4+2] = iris_data[i].petal_length;
-        trainData[i*4+3] = iris_data[i].petal_width;
+        trainData[i*FEATURES] = iris_data[i].sepal_length;
+        trainData[i*FEATURES+1] = iris_data[i].sepal_width;
+        trainData[i*FEATURES+2] = iris_data[i].petal_length;
+        trainData[i*FEATURES+3] = iris_data[i].petal_width;
         trainLabels[i] = mapSpeciesToClass(iris_data[i].species);
     }
 }
@@ -497,10 +497,10 @@ void createTrainingSet(IrisData *iris_data, double *trainData, int *trainLabels,
 // Test set as a subset of the training set (1/3 balanced of each class <- just for testing)
 void createTestSet(double *trainData, double *testData, int *trainLabels, int *testLabels, int numDataSamples){
     for (int i = 0, j = 0; i < numDataSamples; i += 3, j++){
-        testData[j*4] = trainData[i*4];
-        testData[j*4+1] = trainData[i*4+1];
-        testData[j*4+2] = trainData[i*4+2];
-        testData[j*4+3] = trainData[i*4+3];
+        testData[j*FEATURES] = trainData[i*FEATURES];
+        testData[j*FEATURES+1] = trainData[i*FEATURES+1];
+        testData[j*FEATURES+2] = trainData[i*FEATURES+2];
+        testData[j*FEATURES+3] = trainData[i*FEATURES+3];
         testLabels[j] = trainLabels[i];
     }
 }
