@@ -2,7 +2,7 @@
 // *** first version that try to improve knnSortPredict kernel in term of parallelization *****
 
 
-//nvcc knn_parallel.cu -o parallel
+//nvcc knn_diabetes.cu -o parallel
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,26 +13,28 @@
 #include <time.h>
 
 
-#define MAX_LINE_SIZE 1024
-#define MAX_FIELD_SIZE 128
-#define NUM_FIELDS 6    // Id, SepalLengthCm, SepalWidthCm, PetalLengthCm, PetalWidthCm, Species
-
+#define MAX_FIELD_LEN 20
+#define MAX_FIELDS 9
+#define FEATURES 8
 #define FILE_NAME __FILE__
 #define LINE __LINE__
-
-#define FEATURES 4
-#define CLASSES 3
+#define CLASSES 2
 
 
 
+// Define a struct to represent each row of the dataset
 typedef struct {
-    int id;
-    float sepal_length;
-    float sepal_width;
-    float petal_length;
-    float petal_width;
-    char species[MAX_FIELD_SIZE];
-} IrisData;
+    double pregnancies;
+    double glucose;
+    double bloodPressure;
+    double skinThickness;
+    double insulin;
+    double bmi;
+    double diabetesPedigreeFunction;
+    double age;
+    int outcome;
+} Row;
+
 
 
 void CHECK(const cudaError_t call) {
@@ -386,125 +388,112 @@ int checkResult(int *labels, int *predictions, const int N){
 }
 
 
-int readIrisDataset(const char *filename, IrisData **iris_data, int *num_samples) {
-    FILE *file;
-    char line[MAX_LINE_SIZE];
+
+int readCSV(const char *filename, Row **dataset, int *numRows) {
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        printf("Error opening file.\n");
+        return 0;
+    }
+
+    char line[MAX_FIELDS * MAX_FIELD_LEN]; // Adjusted size for line buffer
     char *token;
 
-    // Open the CSV file
-    file = fopen(filename, "r");
-    if (file == NULL) {
-        fprintf(stderr, "Error opening file\n");
-        return 1;
-    }
-
-    // Skip the first line
+    // Skip the first line (column headers)
     if (fgets(line, sizeof(line), file) == NULL) {
-        fprintf(stderr, "Error reading file\n");
+        printf("Error reading file.\n");
         fclose(file);
-        return 1;
+        return 0;
     }
 
-    int count = 0;
-    *num_samples = 0;
-    // Count the number of lines (excluding the first)
+    *numRows = 0;
+    // Calculate the total number of rows in the file
     while (fgets(line, sizeof(line), file) != NULL) {
-        (*num_samples)++;
+        (*numRows)++;
     }
 
-    // Allocate memory for IrisData array
-    *iris_data = (IrisData *)malloc(*num_samples * sizeof(IrisData));
-    if (*iris_data == NULL) {
-        fprintf(stderr, "Memory allocation failed\n");
+    // Allocate memory for the dataset
+    *dataset = (Row *)malloc(*numRows * sizeof(Row));
+    if (*dataset == NULL) {
+        printf("Error allocating memory.\n");
         fclose(file);
-        return 1;
+        return 0;
     }
 
-    // Reset file pointer to the beginning
+    // Reset file pointer to beginning of the file
     fseek(file, 0, SEEK_SET);
-    // Skip the first line
+
+    // Skip the first line (column headers)
     fgets(line, sizeof(line), file);
 
-    // Read each subsequent line of the file
-    while (fgets(line, sizeof(line), file) != NULL) {
-        IrisData *iris = &((*iris_data)[count]);
-        int field_index = 0;
-
-        // Tokenize each line based on the comma delimiter
-        token = strtok(line, ",");
-        while (token != NULL && field_index < NUM_FIELDS) {
-            // Parse and store the tokenized values into appropriate data structures
-            switch (field_index) {
-                case 0:
-                    iris->id = atoi(token);
-                    break;
-                case 1:
-                    iris->sepal_length = atof(token);
-                    break;
-                case 2:
-                    iris->sepal_width = atof(token);
-                    break;
-                case 3:
-                    iris->petal_length = atof(token);
-                    break;
-                case 4:
-                    iris->petal_width = atof(token);
-                    break;
-                case 5:
-                token = strtok(token, "\n");
-                    strcpy(iris->species, token);
-                    break;
-            }
-            // Get the next token
-            token = strtok(NULL, ",");
-            field_index++;
+    // Read data into the dataset
+    for (int i = 0; i < *numRows; i++) {
+        if (fgets(line, sizeof(line), file) == NULL) {
+            printf("Error reading file.\n");
+            fclose(file);
+            free(*dataset); // Free allocated memory before returning
+            return 0;
         }
-        count++;
+        token = strtok(line, ",");
+        (*dataset)[i].pregnancies = atof(token);
+
+        token = strtok(NULL, ",");
+        (*dataset)[i].glucose = atof(token);
+
+        token = strtok(NULL, ",");
+        (*dataset)[i].bloodPressure = atof(token);
+
+        token = strtok(NULL, ",");
+        (*dataset)[i].skinThickness = atof(token);
+
+        token = strtok(NULL, ",");
+        (*dataset)[i].insulin = atof(token);
+
+        token = strtok(NULL, ",");
+        (*dataset)[i].bmi = atof(token);
+
+        token = strtok(NULL, ",");
+        (*dataset)[i].diabetesPedigreeFunction = atof(token);
+
+        token = strtok(NULL, ",");
+        (*dataset)[i].age = atof(token);
+
+        token = strtok(NULL, ",");
+        (*dataset)[i].outcome = atoi(token);
     }
 
-    // Close the file
     fclose(file);
-
-    return 0;
+    return 1;
 }
 
 
-// Function to map species string to class number
-int mapSpeciesToClass(const char *species) {
-    if (strcmp(species, "Iris-setosa") == 0) {
-        return 0;
-    } else if (strcmp(species, "Iris-versicolor") == 0) {
-        return 1;
-    } else if (strcmp(species, "Iris-virginica") == 0) {
-        return 2;
-    } else {
-        return -1; // Unknown species
+// Function to extract the features and outcomes from the array of structs into separate arrays
+void extractFeaturesAndOutcomes(const Row *dataset, double *features, int *outcomes, int numRows) {
+    for (int i = 0; i < numRows; i++) {
+        features[i * FEATURES] = dataset[i].pregnancies;
+        features[i * FEATURES + 1] = dataset[i].glucose;
+        features[i * FEATURES + 2] = dataset[i].bloodPressure;
+        features[i * FEATURES + 3] = dataset[i].skinThickness;
+        features[i * FEATURES + 4] = dataset[i].insulin;
+        features[i * FEATURES + 5] = dataset[i].bmi;
+        features[i * FEATURES + 6] = dataset[i].diabetesPedigreeFunction;
+        features[i * FEATURES + 7] = dataset[i].age;
+
+        outcomes[i] = dataset[i].outcome;
     }
 }
 
-
-// Training set composed of all the dataset samples
-void createTrainingSet(IrisData *iris_data, double *trainData, int *trainLabels, int numSamples){
-    for(int i = 0; i < numSamples; i++){
-        trainData[i*FEATURES] = iris_data[i].sepal_length;
-        trainData[i*FEATURES+1] = iris_data[i].sepal_width;
-        trainData[i*FEATURES+2] = iris_data[i].petal_length;
-        trainData[i*FEATURES+3] = iris_data[i].petal_width;
-        trainLabels[i] = mapSpeciesToClass(iris_data[i].species);
+void printDataSet(double *trainData, int *trainLabels, int trainSize){
+    for(int i = 0; i < trainSize; i++){
+        printf("Data[%d]", i);
+        for(int j = 0; j < FEATURES; j++){
+            int idx = i * FEATURES + j;
+            printf("%9.3f", trainData[idx]);
+        }
+        printf(" -> label: %d\n\n", trainLabels[i]);
     }
 }
 
-
-// Test set as a subset of the training set (1/3 balanced of each class <- just for testing)
-void createTestSet(double *trainData, double *testData, int *trainLabels, int *testLabels, int numDataSamples){
-    for (int i = 0, j = 0; i < numDataSamples; i += 3, j++){
-        testData[j*FEATURES] = trainData[i*FEATURES];
-        testData[j*FEATURES+1] = trainData[i*FEATURES+1];
-        testData[j*FEATURES+2] = trainData[i*FEATURES+2];
-        testData[j*FEATURES+3] = trainData[i*FEATURES+3];
-        testLabels[j] = trainLabels[i];
-    }
-}
 
 
 void createTrainIndexes(int *trainIndexes, int testSize, int trainSize){
@@ -541,16 +530,7 @@ void printDistances(double *distances, int testSize, int trainSize){
 }
 
 
-void printDataSet(double *trainData, int *trainLabels, int trainSize){
-    for(int i = 0; i < trainSize; i++){
-        printf("Data[%d]", i);
-        for(int j = 0; j < FEATURES; j++){
-            int idx = i * FEATURES + j;
-            printf("%6.3f", trainData[idx]);
-        }
-        printf(" -> label: %d\n\n", trainLabels[i]);
-    }
-}
+
 
 
 
@@ -563,36 +543,70 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    int k = 5; // k = 5
+    int k = 10; 
     int metric = 1; // Metric distance
 
-    IrisData *iris_data;
+    Row *dataset;
     int trainSize;
+    int testSize;
 
-    // Read the Iris dataset
-    if (readIrisDataset("Iris.csv", &iris_data, &trainSize) != 0) {
-        fprintf(stderr, "Error reading Iris dataset\n");
+    // TRAINING DATA
+    if (readCSV("diabetes_training.csv", &dataset, &trainSize) != 1) {
+        printf("Error reading CSV file.\n");
         return 1;
     }
 
-    int testSize = trainSize/3;
-
+    // Allocate memory for trainData
     double *trainData = (double *)malloc(trainSize * FEATURES * sizeof(double));
+    if (trainData == NULL) {
+        printf("Error allocating memory.\n");
+        free(dataset);
+        return 1;
+    }
+
+    // Allocate memory for train labels
     int *trainLabels = (int *)malloc(trainSize * sizeof(int));
+    if (trainLabels == NULL) {
+        printf("Error allocating memory.\n");
+        free(dataset);
+        free(trainData);
+        return 1;
+    }
 
-    createTrainingSet(iris_data, trainData, trainLabels, trainSize);
+    // Training data extraction
+    extractFeaturesAndOutcomes(dataset, trainData, trainLabels, trainSize);
+    //printDataSet(trainData, trainLabels, numRows);
 
-    // Test set (1/3 of training set, balanced over classes -> 17,17,16)
-    size_t testDataSize = (trainSize / 3) * FEATURES * sizeof(double);
-    size_t testLabelsSize = (trainSize / 3) * sizeof(int);
     
-    double *testData = (double *)malloc(testDataSize);
-    int *testLabels = (int *)malloc(testLabelsSize);
-    
-    createTestSet(trainData, testData, trainLabels, testLabels, trainSize);
+    // TEST DATA
+    if (readCSV("diabetes_testing.csv", &dataset, &testSize) != 1) {
+        printf("Error reading CSV file.\n");
+        return 1;
+    }
+
+    // Allocate memory for testData
+    double *testData = (double *)malloc(testSize * FEATURES * sizeof(double));
+    if (testData == NULL) {
+        printf("Error allocating memory.\n");
+        free(dataset);
+        return 1;
+    }
+
+    // Allocate memory for test labels
+    int *testLabels = (int*)malloc(testSize * sizeof(int));
+    if (testLabels == NULL) {
+        printf("Error allocating memory.\n");
+        free(dataset);
+        free(testData);
+        return 1;
+    }
+
+    // Test data extraction
+    extractFeaturesAndOutcomes(dataset, testData, testLabels, testSize);
+    //printDataSet(testData, testLabels, testSize);
+
 
     double *distances = (double *)malloc(trainSize * testSize * sizeof(double));
-
     int *trainIndexes = (int *)malloc(trainSize * testSize * sizeof(int));
     int *predictions = (int *)malloc(testSize * sizeof(int));
 
@@ -685,7 +699,7 @@ int main(int argc, char** argv) {
 
 
     // Free host memory
-    free(iris_data);
+    free(dataset);
     free(trainData);
     free(trainLabels);
     free(testData);
