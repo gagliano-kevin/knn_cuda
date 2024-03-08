@@ -1,5 +1,5 @@
-// *********** version with correct shared memory allocation ***********
-// *** first version that try to improve knnSortPredict kernel *****
+// *********** BEST VERSION with correct shared memory allocation ***********
+// *** first version that try to improve knnSortPredict kernel in term of parallelization *****
 
 
 //nvcc knn_parallel_sort.cu -o parallel
@@ -107,7 +107,7 @@ __device__ void bubbleSort(double *distances, int *indexes, int startIdx, int en
 }
 
 
-__global__ void knnSortPredict(double *distances, int trainSize, int *indexes, int k, int *predictions, int *trainLabels, int sharedMemoryIdx) {
+__global__ void knnSortPredict(double *distances, int trainSize, int *indexes, int k, int *predictions, int *trainLabels, int sharedMemoryIdx, int alpha) {
     int row = blockIdx.x;
     int portion = (int)trainSize / blockDim.x;
 
@@ -125,6 +125,9 @@ __global__ void knnSortPredict(double *distances, int trainSize, int *indexes, i
     double *sharedDistances = sharedMemory;
     int *sharedIndexes = (int*)&sharedMemory[sharedMemoryIdx];
 
+    double *sharedDistances2 = &sharedDistances[k * blockDim.x];
+    int *sharedIndexes2 = &sharedIndexes[k * blockDim.x];
+
     for (int i = 0; i < k; i++) {
         sharedDistances[threadIdx.x * k + i] = distances[startIdx + i];
         sharedIndexes[threadIdx.x * k + i] = indexes[startIdx + i];
@@ -132,14 +135,69 @@ __global__ void knnSortPredict(double *distances, int trainSize, int *indexes, i
     
     __syncthreads();
 
-    // Bubble sort on shared memory (k * blockDim.x) elements 
+
+    ///
+    int iter = 1;
+    int workers = blockDim.x;
+    trainSize = k * workers;
+
+    while(trainSize >= 4 * k){
+        iter++;
+        workers = (int)workers / alpha;
+        portion = alpha * k;
+        if(iter % 2 == 0){      // even iteration
+            if(threadIdx.x < workers){
+                int startIdx = threadIdx.x * portion;
+                int endIdx = startIdx + portion;
+                if(threadIdx.x == workers - 1){ // last thread 
+                    endIdx = trainSize;
+                }
+                bubbleSort(sharedDistances, sharedIndexes, startIdx, endIdx);
+                for (int i = 0; i < k; i++) {
+                    sharedDistances2[threadIdx.x * k + i] = sharedDistances[startIdx + i];
+                    sharedIndexes2[threadIdx.x * k + i] = sharedIndexes[startIdx + i];
+                }
+                
+                __syncthreads();
+            }
+        } else {        // odd iteration
+            if(threadIdx.x < workers){
+                int startIdx = threadIdx.x * portion;
+                int endIdx = startIdx + portion;
+                if(threadIdx.x == workers - 1){ // last thread 
+                    endIdx = trainSize;
+                }
+                bubbleSort(sharedDistances2, sharedIndexes2, startIdx, endIdx);
+                for (int i = 0; i < k; i++) {
+                    sharedDistances[threadIdx.x * k + i] = sharedDistances2[startIdx + i];
+                    sharedIndexes[threadIdx.x * k + i] = sharedIndexes2[startIdx + i];
+                }
+                
+                __syncthreads();
+            }
+        }
+        trainSize = k * workers;
+    }
+
+    ///
+
+    /// last iteration (sequential with 1 worker)
     if(threadIdx.x == 0){
-        bubbleSort(sharedDistances, sharedIndexes, 0, k * blockDim.x);
+        double *distances;
+        int *indexes;
+        if(iter % 2 == 0){
+            distances = sharedDistances2;
+            indexes = sharedIndexes2;
+        } else {
+            distances = sharedDistances;
+            indexes = sharedIndexes;
+        }
+        bubbleSort(distances, indexes, 0, trainSize);
 
         // Nearest class election
         int classCounts[CLASSES] = {0};
         for (int i = 0; i < k; i++){        
-            classCounts[trainLabels[sharedIndexes[i]]]++;
+            classCounts[trainLabels[indexes[i]]]++;
         }
 
         int max = 0; 
@@ -156,7 +214,7 @@ __global__ void knnSortPredict(double *distances, int trainSize, int *indexes, i
 
 
 
-void writeResultsToFile(int * trainLabels, int *results, int errorCount, int testSize, const char *filename, int trainSize, int features, int k, int metric, unsigned int *distDim, unsigned int *predDim, double kernelTime1, double kernelTime2) {
+void writeResultsToFile(int * trainLabels, int *results, int errorCount, int testSize, const char *filename, int trainSize, int features, int k, int metric, unsigned int *distDim, unsigned int *predDim, int alpha, double kernelTime1, double kernelTime2) {
     FILE *file = fopen(filename, "w");
     if (file == NULL) {
         printf("Error opening file!\n");
@@ -168,6 +226,7 @@ void writeResultsToFile(int * trainLabels, int *results, int errorCount, int tes
     fprintf(file, "Block dimension in knnDistances kernel: %u , %u\n", distDim[2], distDim[3]);
     fprintf(file, "Grid dimension in knnSortPredict kernel: %u , %u\n",predDim[0], predDim[1]);
     fprintf(file, "Block dimension in knnSortPredict kernel: %u , %u\n", predDim[2], predDim[3]);
+    fprintf(file, "Factor alpha: %d\n", alpha);
     fprintf(file, "knnDistances execution time %f sec\n", kernelTime1);
     fprintf(file, "knnSortPredict execution time %f sec\n", kernelTime2);
 
@@ -578,11 +637,19 @@ int main(int argc, char** argv) {
 
     dim3 gridDim(testSize, 1, 1);   // each thread block is responsible for a row of the distances matrix
     dim3 blockDim(workers, 1, 1);
-    int sharedMemorySize = (k * blockDim.x) * (sizeof(double) + sizeof(int)); 
-    int index = k * blockDim.x;
+    int alpha = 2;  // default
+    if(argc > 4){
+        alpha = atoi(argv[4]);
+    }
+    int sharedWorkers = (int)(blockDim.x / alpha);
+    int additionalMemory = k * sharedWorkers * (sizeof(double) + sizeof(int));  // blockDim.x/alpha is the number of workers in 2^ iteration (first in shared memory)
+
+    int sharedMemorySize = (k * blockDim.x) * (sizeof(double) + sizeof(int)) + additionalMemory; 
+
+    int index = k * (blockDim.x + sharedWorkers); // starting index for trainIndexes in shared memory 
 
     double knnSortStart = cpuSecond();
-    knnSortPredict<<< gridDim, blockDim, sharedMemorySize>>>(d_distances, trainSize, d_trainIndexes, k, d_predictions, d_trainLabels, index);
+    knnSortPredict<<< gridDim, blockDim, sharedMemorySize>>>(d_distances, trainSize, d_trainIndexes, k, d_predictions, d_trainLabels, index, alpha);
     cudaDeviceSynchronize();        //forcing synchronous behavior
     double knnSortElaps = cpuSecond() - knnSortStart;
 
@@ -605,7 +672,7 @@ int main(int argc, char** argv) {
     unsigned int predDim[4] = {gridDim.x, gridDim.y, blockDim.x, blockDim.y};
 
     // Write results and device info to file
-    writeResultsToFile(testLabels, predictions, errorCount, testSize, "par_results.txt", trainSize, FEATURES, k, metric, distDim, predDim, knnDistElaps, knnSortElaps); 
+    writeResultsToFile(testLabels, predictions, errorCount, testSize, "par_results.txt", trainSize, FEATURES, k, metric, distDim, predDim, alpha, knnDistElaps, knnSortElaps); 
     writeDeviceInfo("device_info.txt", device);
 
     // Free device memory

@@ -1,5 +1,5 @@
-// *********** version with correct shared memory allocation ***********
-// *** parallel knnSortPredict kernel only in the first iteration *****
+// *********** version with correct shared memory allocation (no bug in last thread endIdx calculation)***********
+// ***************** parallelization of knnSortPredict kernel only in the first iteration ***********************
 
 
 //nvcc knn_parallel_sort.cu -o parallel

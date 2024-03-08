@@ -1,4 +1,5 @@
-// ********* version with fixed size shared memory for distances and indexes *********
+// ********* version with FIXED SIZE shared memory (STATIC ALLOCATION) for distances and indexes *********
+// first kernel with shared memory usage
 
 
 
