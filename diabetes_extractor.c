@@ -99,78 +99,103 @@ int readCSV(const char *filename, Row **dataset, int *numRows) {
 
 
 // Function to extract the features and outcomes from the array of structs into separate arrays
-void extractFeaturesAndOutcomes(const Row *dataset, double **features, int *outcomes, int numRows) {
+void extractFeaturesAndOutcomes(const Row *dataset, double *features, int *outcomes, int numRows) {
     for (int i = 0; i < numRows; i++) {
-        features[i][0] = dataset[i].pregnancies;
-        features[i][1] = dataset[i].glucose;
-        features[i][2] = dataset[i].bloodPressure;
-        features[i][3] = dataset[i].skinThickness;
-        features[i][4] = dataset[i].insulin;
-        features[i][5] = dataset[i].bmi;
-        features[i][6] = dataset[i].diabetesPedigreeFunction;
-        features[i][7] = dataset[i].age;
+        features[i * FEATURES] = dataset[i].pregnancies;
+        features[i * FEATURES + 1] = dataset[i].glucose;
+        features[i * FEATURES + 2] = dataset[i].bloodPressure;
+        features[i * FEATURES + 3] = dataset[i].skinThickness;
+        features[i * FEATURES + 4] = dataset[i].insulin;
+        features[i * FEATURES + 5] = dataset[i].bmi;
+        features[i * FEATURES + 6] = dataset[i].diabetesPedigreeFunction;
+        features[i * FEATURES + 7] = dataset[i].age;
 
         outcomes[i] = dataset[i].outcome;
     }
 }
 
+void printDataSet(double *trainData, int *trainLabels, int trainSize){
+    for(int i = 0; i < trainSize; i++){
+        printf("Data[%d]", i);
+        for(int j = 0; j < FEATURES; j++){
+            int idx = i * FEATURES + j;
+            printf("%9.3f", trainData[idx]);
+        }
+        printf(" -> label: %d\n\n", trainLabels[i]);
+    }
+}
+
 int main() {
     Row *dataset;
-    int numRows;
+    int trainSize;
+    int testSize;
 
-    if (readCSV("diabetes_training.csv", &dataset, &numRows) != 1) {
+    // TRAINING DATA
+
+    if (readCSV("diabetes_training.csv", &dataset, &trainSize) != 1) {
         printf("Error reading CSV file.\n");
         return 1;
     }
 
     // Allocate memory for trainData
-    double **trainData = (double **)malloc(numRows * sizeof(double *));
+    double *trainData = (double *)malloc(trainSize * FEATURES * sizeof(double));
     if (trainData == NULL) {
         printf("Error allocating memory.\n");
         free(dataset);
         return 1;
     }
-    for (int i = 0; i < numRows; i++) {
-        trainData[i] = (double *)malloc(FEATURES * sizeof(double));
-        if (trainData[i] == NULL) {
-            printf("Error allocating memory.\n");
-            for (int j = 0; j < i; j++) {
-                free(trainData[j]);
-            }
-            free(trainData);
-            free(dataset);
-            return 1;
-        }
+
+    // Allocate memory for train labels
+    int *trainLabels = malloc(trainSize * sizeof(int));
+    if (trainLabels == NULL) {
+        printf("Error allocating memory.\n");
+        free(dataset);
+        free(trainData);
+        return 1;
     }
 
-    // Allocate memory for labels
-    int *labels = malloc(numRows * sizeof(int));
-    if (labels == NULL) {
+    // Training data extraction
+    extractFeaturesAndOutcomes(dataset, trainData, trainLabels, trainSize);
+
+    //printDataSet(trainData, trainLabels, numRows);
+
+    
+    // TEST DATA
+
+    if (readCSV("diabetes_testing.csv", &dataset, &testSize) != 1) {
+        printf("Error reading CSV file.\n");
+        return 1;
+    }
+
+    // Allocate memory for testData
+    double *testData = (double *)malloc(testSize * FEATURES * sizeof(double));
+    if (testData == NULL) {
         printf("Error allocating memory.\n");
-        for (int i = 0; i < numRows; i++) {
-            free(trainData[i]);
-        }
-        free(trainData);
         free(dataset);
         return 1;
     }
 
-    extractFeaturesAndOutcomes(dataset, trainData, labels, numRows);
-
-    // Output the extracted data
-    for (int i = 0; i < numRows; i++) {
-        for (int j = 0; j < FEATURES; j++) {
-            printf("%f ", trainData[i][j]);
-        }
-        printf("%d\n", labels[i]);
+    // Allocate memory for test labels
+    int *testLabels = malloc(testSize * sizeof(int));
+    if (testLabels == NULL) {
+        printf("Error allocating memory.\n");
+        free(dataset);
+        free(testData);
+        return 1;
     }
+
+    // Test data extraction
+    extractFeaturesAndOutcomes(dataset, testData, testLabels, testSize);
+    
+
+    //printDataSet(testData, testLabels, testSize);
+    
 
     // Free allocated memory
-    for (int i = 0; i < numRows; i++) {
-        free(trainData[i]);
-    }
+    free(testData);
+    free(testLabels);
     free(trainData);
-    free(labels);
+    free(trainLabels);
     free(dataset);
 
     return 0;
