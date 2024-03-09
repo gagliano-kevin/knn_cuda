@@ -427,15 +427,10 @@ int main() {
 
     createTrainIndexes(trainIndexes, testSize, trainSize);
 
-    // Bitonic sort <----------------------------------------------------------- knn_bitonic assumes that labels are in the last column of trainData (must be modify)
-    //int *predicted_labels_bitonic;
-    //knn_bitonic();
-
 
     double knnStart = cpuSecond();
     knn_bubble(trainData, testData, distances, trainSize, testSize, trainIndexes, k, metric, predictions, trainLabels);
     double knnElaps = cpuSecond() - knnStart;
-
 
 
     //printDataSet(trainData, trainLabels, trainSize);

@@ -31,7 +31,7 @@ typedef struct {
     double bmi;
     double diabetesPedigreeFunction;
     double age;
-    int outcome;
+    int label;
 } Row;
 
 
@@ -459,7 +459,7 @@ int readCSV(const char *filename, Row **dataset, int *numRows) {
         (*dataset)[i].age = atof(token);
 
         token = strtok(NULL, ",");
-        (*dataset)[i].outcome = atoi(token);
+        (*dataset)[i].label = atoi(token);
     }
 
     fclose(file);
@@ -467,8 +467,8 @@ int readCSV(const char *filename, Row **dataset, int *numRows) {
 }
 
 
-// Function to extract the features and outcomes from the array of structs into separate arrays
-void extractFeaturesAndOutcomes(const Row *dataset, double *features, int *outcomes, int numRows) {
+// Function to extract the features and labels from the array of structs into separate arrays
+void extractData(const Row *dataset, double *features, int *labels, int numRows) {
     for (int i = 0; i < numRows; i++) {
         features[i * FEATURES] = dataset[i].pregnancies;
         features[i * FEATURES + 1] = dataset[i].glucose;
@@ -479,7 +479,7 @@ void extractFeaturesAndOutcomes(const Row *dataset, double *features, int *outco
         features[i * FEATURES + 6] = dataset[i].diabetesPedigreeFunction;
         features[i * FEATURES + 7] = dataset[i].age;
 
-        outcomes[i] = dataset[i].outcome;
+        labels[i] = dataset[i].label;
     }
 }
 
@@ -574,7 +574,7 @@ int main(int argc, char** argv) {
     }
 
     // Training data extraction
-    extractFeaturesAndOutcomes(dataset, trainData, trainLabels, trainSize);
+    extractData(dataset, trainData, trainLabels, trainSize);
     //printDataSet(trainData, trainLabels, numRows);
 
     
@@ -602,7 +602,7 @@ int main(int argc, char** argv) {
     }
 
     // Test data extraction
-    extractFeaturesAndOutcomes(dataset, testData, testLabels, testSize);
+    extractData(dataset, testData, testLabels, testSize);
     //printDataSet(testData, testLabels, testSize);
 
 
