@@ -1,5 +1,4 @@
-// *********** BEST VERSION with correct shared memory allocation ***********
-// *** first version that try to improve knnSortPredict kernel in term of parallelization *****
+// ******************* Instance of knn_parallel.cu on Diabetes dataset (KNN v.3 -> BEST VERSION) ***********************
 
 
 //nvcc knn_diabetes.cu -o parallel
@@ -109,7 +108,7 @@ __device__ void bubbleSort(double *distances, int *indexes, int startIdx, int en
 }
 
 
-__global__ void knnSortPredict(double *distances, int trainSize, int *indexes, int k, int *predictions, int *trainLabels, int sharedMemoryIdx, int alpha) {
+__global__ void knnSortPredict(double *distances, int trainSize, int *indexes, int k, int *predictions, int *trainLabels, int sharedMemoryIdx, int alpha, int beta) {
     int row = blockIdx.x;
     int portion = (int)trainSize / blockDim.x;
 
@@ -143,7 +142,7 @@ __global__ void knnSortPredict(double *distances, int trainSize, int *indexes, i
     int workers = blockDim.x;
     trainSize = k * workers;
 
-    while(trainSize >= 4 * k){
+    while(trainSize >= beta * k){
         iter++;
         workers = (int)workers / alpha;
         portion = alpha * k;
@@ -216,7 +215,7 @@ __global__ void knnSortPredict(double *distances, int trainSize, int *indexes, i
 
 
 
-void writeResultsToFile(int * trainLabels, int *results, int errorCount, int testSize, const char *filename, int trainSize, int features, int k, int metric, unsigned int *distDim, unsigned int *predDim, int workers, int alpha, double kernelTime1, double kernelTime2) {
+void writeResultsToFile(int * trainLabels, int *results, int errorCount, int testSize, const char *filename, int trainSize, int features, int k, int metric, unsigned int *distDim, unsigned int *predDim, int workers, int alpha, int beta, double kernelTime1, double kernelTime2) {
     FILE *file = fopen(filename, "w");
     if (file == NULL) {
         printf("Error opening file!\n");
@@ -230,6 +229,7 @@ void writeResultsToFile(int * trainLabels, int *results, int errorCount, int tes
     fprintf(file, "Block dimension in knnSortPredict kernel: %u , %u\n", predDim[2], predDim[3]);
     fprintf(file, "Number of workers: %d\n", workers);
     fprintf(file, "Factor alpha: %d\n", alpha);
+    fprintf(file, "Factor beta: %d\n", beta);
     fprintf(file, "knnDistances execution time %f sec\n", kernelTime1);
     fprintf(file, "knnSortPredict execution time %f sec\n", kernelTime2);
 
@@ -655,6 +655,11 @@ int main(int argc, char** argv) {
     if(argc > 4){
         alpha = atoi(argv[4]);
     }
+
+    int beta = 4;   // default
+    if(argc > 5){
+        beta = atoi(argv[5]);
+    }
     int sharedWorkers = (int)(blockDim.x / alpha);
     int additionalMemory = k * sharedWorkers * (sizeof(double) + sizeof(int));  // blockDim.x/alpha is the number of workers in 2^ iteration (first in shared memory)
 
@@ -663,7 +668,7 @@ int main(int argc, char** argv) {
     int index = k * (blockDim.x + sharedWorkers); // starting index for trainIndexes in shared memory 
 
     double knnSortStart = cpuSecond();
-    knnSortPredict<<< gridDim, blockDim, sharedMemorySize>>>(d_distances, trainSize, d_trainIndexes, k, d_predictions, d_trainLabels, index, alpha);
+    knnSortPredict<<< gridDim, blockDim, sharedMemorySize>>>(d_distances, trainSize, d_trainIndexes, k, d_predictions, d_trainLabels, index, alpha, beta);
     cudaDeviceSynchronize();        //forcing synchronous behavior
     double knnSortElaps = cpuSecond() - knnSortStart;
 
@@ -686,7 +691,7 @@ int main(int argc, char** argv) {
     unsigned int predDim[4] = {gridDim.x, gridDim.y, blockDim.x, blockDim.y};
 
     // Write results and device info to file
-    writeResultsToFile(testLabels, predictions, errorCount, testSize, "par_results.txt", trainSize, FEATURES, k, metric, distDim, predDim, workers, alpha, knnDistElaps, knnSortElaps); 
+    writeResultsToFile(testLabels, predictions, errorCount, testSize, "par_results.txt", trainSize, FEATURES, k, metric, distDim, predDim, workers, alpha, beta, knnDistElaps, knnSortElaps); 
     writeDeviceInfo("device_info.txt", device);
 
     // Free device memory

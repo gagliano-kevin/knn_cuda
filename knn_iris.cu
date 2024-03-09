@@ -1,3 +1,5 @@
+// ************ First version of K-Nearest Neighbors (KNN) algorithm (inefficient) ************
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -1,4 +1,4 @@
-// *********** version with correct shared memory allocation (no bug in last thread endIdx calculation)***********
+// *************************** second version of KNN with shared memory allocation ******************************
 // ***************** parallelization of knnSortPredict kernel only in the first iteration ***********************
 
 
