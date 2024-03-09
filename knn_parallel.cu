@@ -179,9 +179,7 @@ __global__ void knnSortPredict(double *distances, int trainSize, int *indexes, i
         trainSize = k * workers;
     }
 
-    ///
-
-    /// last iteration (sequential with 1 worker)
+    // last iteration (sequential with 1 worker)
     if(threadIdx.x == 0){
         double *distances;
         int *indexes;
