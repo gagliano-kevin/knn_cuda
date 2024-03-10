@@ -1,7 +1,7 @@
-// ******************* Instance of knn_parallel.cu on Diabetes dataset (KNN v.3 -> BEST VERSION) ***********************
+// ******************* Test on various type of optimizations (KNN v.3 -> BEST VERSION) ***********************
 
+//nvcc optimizationTests.cu -o test
 
-//nvcc knn_diabetes.cu -o parallel
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,28 +11,10 @@
 #include <sys/time.h>
 #include <time.h>
 
-
-#define MAX_FIELD_LEN 20
-#define MAX_FIELDS 9
-#define FEATURES 8
+#define BUFFER_SIZE 256
 #define FILE_NAME __FILE__
 #define LINE __LINE__
-#define CLASSES 2
 
-
-
-// Define a struct to represent each row of the dataset
-typedef struct {
-    double pregnancies;
-    double glucose;
-    double bloodPressure;
-    double skinThickness;
-    double insulin;
-    double bmi;
-    double diabetesPedigreeFunction;
-    double age;
-    int label;
-} Row;
 
 
 
@@ -54,20 +36,20 @@ double cpuSecond(){
 
 
 // Compute distance between two points based on the selected metric
-__device__ double computeDistance(double *point1, double *point2, int metric, int exp) {
+__device__ double computeDistance(double *point1, double *point2, int metric, int exp, int num_features) {
     double distance = 0.0;
     if (metric == 1) { // Euclidean distance
-        for (int i = 0; i < FEATURES; i++) {
+        for (int i = 0; i < num_features; i++) {
             distance += (point1[i] - point2[i]) * (point1[i] - point2[i]);
         }
         distance = sqrt(distance);
     } else if (metric == 2) { // Manhattan distance
-        for (int i = 0; i < FEATURES; i++) {
+        for (int i = 0; i < num_features; i++) {
             distance += fabs(point1[i] - point2[i]);
         }
     } else if (metric == 3) { // Minkowski distance with p = exp
         double sum = 0.0;
-        for (int i = 0; i < FEATURES; i++) {
+        for (int i = 0; i < num_features; i++) {
             sum += pow(fabs(point1[i] - point2[i]), exp);
         }
         distance = pow(sum, 1.0 / (float)exp);
@@ -77,12 +59,12 @@ __device__ double computeDistance(double *point1, double *point2, int metric, in
 
 
 // distances matrix has size testSize x TrainSize 
-__global__ void knnDistances(double *trainData, double *testData, double *distances, int trainSize, int testSize, int metric, int exp) { 
+__global__ void knnDistances(double *trainData, double *testData, double *distances, int trainSize, int testSize, int metric, int exp, int num_features) { 
     unsigned int ix = threadIdx.x + blockIdx.x * blockDim.x;
     unsigned int iy = threadIdx.y + blockIdx.y * blockDim.y;
     unsigned int idx = iy * trainSize + ix; 
     if(ix < trainSize && iy < testSize){
-        distances[idx]=computeDistance(&trainData[ix * FEATURES], &testData[iy * FEATURES], metric, exp);
+        distances[idx]=computeDistance(&trainData[ix * num_features], &testData[iy * num_features], metric, exp, num_features);
     }
 }
 
@@ -108,7 +90,8 @@ __device__ void bubbleSort(double *distances, int *indexes, int startIdx, int en
 }
 
 
-__global__ void knnSortPredict(double *distances, int trainSize, int *indexes, int k, int *predictions, int *trainLabels, int sharedMemoryIdx, int alpha, int beta) {
+// exter "C" is used to avoid name mangling
+extern "C" __global__ void knnSortPredict(double *distances, int trainSize, int *indexes, int k, int *predictions, int *trainLabels, int sharedMemoryIdx, int alpha, int beta, int classes) {
     int row = blockIdx.x;
     int portion = (int)trainSize / blockDim.x;
 
@@ -137,7 +120,6 @@ __global__ void knnSortPredict(double *distances, int trainSize, int *indexes, i
     __syncthreads();
 
 
-    ///
     int iter = 1;
     int workers = blockDim.x;
     trainSize = k * workers;
@@ -194,20 +176,25 @@ __global__ void knnSortPredict(double *distances, int trainSize, int *indexes, i
         bubbleSort(distances, indexes, 0, trainSize);
 
         // Nearest class election
-        int classCounts[CLASSES] = {0};
+        int* classCounts = new int[classes];
+        // Initialize all elements to zero
+        for (int i = 0; i < classes; ++i) {
+            classCounts[i] = 0;
+        }
         for (int i = 0; i < k; i++){        
             classCounts[trainLabels[indexes[i]]]++;
         }
 
         int max = 0; 
         int maxClass = -1;
-        for (int i = 0; i < CLASSES; i++){        
+        for (int i = 0; i < classes; i++){        
             if(classCounts[i] > max){
                 max = classCounts[i];
                 maxClass = i;
             }
         }
         predictions[row] = maxClass;
+        delete[] classCounts;
     }
 }
 
@@ -386,106 +373,11 @@ int checkResult(int *labels, int *predictions, const int N){
 }
 
 
-
-int readCSV(const char *filename, Row **dataset, int *numRows) {
-    FILE *file = fopen(filename, "r");
-    if (file == NULL) {
-        printf("Error opening file.\n");
-        return 0;
-    }
-
-    char line[MAX_FIELDS * MAX_FIELD_LEN]; // Adjusted size for line buffer
-    char *token;
-
-    // Skip the first line (column headers)
-    if (fgets(line, sizeof(line), file) == NULL) {
-        printf("Error reading file.\n");
-        fclose(file);
-        return 0;
-    }
-
-    *numRows = 0;
-    // Calculate the total number of rows in the file
-    while (fgets(line, sizeof(line), file) != NULL) {
-        (*numRows)++;
-    }
-
-    // Allocate memory for the dataset
-    *dataset = (Row *)malloc(*numRows * sizeof(Row));
-    if (*dataset == NULL) {
-        printf("Error allocating memory.\n");
-        fclose(file);
-        return 0;
-    }
-
-    // Reset file pointer to beginning of the file
-    fseek(file, 0, SEEK_SET);
-
-    // Skip the first line (column headers)
-    fgets(line, sizeof(line), file);
-
-    // Read data into the dataset
-    for (int i = 0; i < *numRows; i++) {
-        if (fgets(line, sizeof(line), file) == NULL) {
-            printf("Error reading file.\n");
-            fclose(file);
-            free(*dataset); // Free allocated memory before returning
-            return 0;
-        }
-        token = strtok(line, ",");
-        (*dataset)[i].pregnancies = atof(token);
-
-        token = strtok(NULL, ",");
-        (*dataset)[i].glucose = atof(token);
-
-        token = strtok(NULL, ",");
-        (*dataset)[i].bloodPressure = atof(token);
-
-        token = strtok(NULL, ",");
-        (*dataset)[i].skinThickness = atof(token);
-
-        token = strtok(NULL, ",");
-        (*dataset)[i].insulin = atof(token);
-
-        token = strtok(NULL, ",");
-        (*dataset)[i].bmi = atof(token);
-
-        token = strtok(NULL, ",");
-        (*dataset)[i].diabetesPedigreeFunction = atof(token);
-
-        token = strtok(NULL, ",");
-        (*dataset)[i].age = atof(token);
-
-        token = strtok(NULL, ",");
-        (*dataset)[i].label = atoi(token);
-    }
-
-    fclose(file);
-    return 1;
-}
-
-
-// Function to extract the features and labels from the array of structs into separate arrays
-void extractData(const Row *dataset, double *features, int *labels, int numRows) {
-    for (int i = 0; i < numRows; i++) {
-        features[i * FEATURES] = dataset[i].pregnancies;
-        features[i * FEATURES + 1] = dataset[i].glucose;
-        features[i * FEATURES + 2] = dataset[i].bloodPressure;
-        features[i * FEATURES + 3] = dataset[i].skinThickness;
-        features[i * FEATURES + 4] = dataset[i].insulin;
-        features[i * FEATURES + 5] = dataset[i].bmi;
-        features[i * FEATURES + 6] = dataset[i].diabetesPedigreeFunction;
-        features[i * FEATURES + 7] = dataset[i].age;
-
-        labels[i] = dataset[i].label;
-    }
-}
-
-void printDataSet(double *trainData, int *trainLabels, int trainSize){
+void printDataSet(double *trainData, int *trainLabels, int trainSize, int num_features){
     for(int i = 0; i < trainSize; i++){
         printf("Data[%d]", i);
-        for(int j = 0; j < FEATURES; j++){
-            int idx = i * FEATURES + j;
+        for(int j = 0; j < num_features; j++){
+            int idx = i * num_features + j;
             printf("%9.3f", trainData[idx]);
         }
         printf(" -> label: %d\n\n", trainLabels[i]);
@@ -528,12 +420,132 @@ void printDistances(double *distances, int testSize, int trainSize){
 }
 
 
+// Function to generate a Dataset
+void generateData(int size, int num_features, double **data, int **labels, double mean) {
+    // Allocate memory for data and labels
+    *data = (double *)malloc(size * num_features * sizeof(double));
+    *labels = (int *)malloc(size * sizeof(int));
+    
+    // Generate training data
+    double noise = 0.1; // Adjust this value to control noise level
+    
+    srand(time(NULL)); // Seed for random number generation
+    
+    for (int i = 0; i < size; i++) {
+        int class_index = i % num_features;
+        
+        // Fill data vector with noise
+        for (int j = 0; j < num_features; j++) {
+            if (j == class_index) {
+                // Generate value for class component as sum of mean value and noise
+                (*data)[i * num_features + j] = mean + ((double)rand() / RAND_MAX) * noise;
+            } else {
+                // Other components are noise
+                (*data)[i * num_features + j] = ((double)rand() / RAND_MAX) * noise;
+            }
+        }
+        
+        // Assign label
+        (*labels)[i] = class_index;
+    }
+}
 
 
+char* getCompilerInfo() {
+    char buffer[BUFFER_SIZE];
+    char* compilerInfo = (char *)malloc(1); // Allocate memory for the string
+    compilerInfo[0] = '\0'; // Ensure the string is properly terminated
+
+    FILE* fp = popen("gcc --version", "r");
+    if (fp == NULL) {
+        printf("Failed to run command\n");
+        return NULL;
+    }
+
+    while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+        // Append the line to the compilerInfo string
+        compilerInfo = (char *)realloc(compilerInfo, strlen(compilerInfo) + strlen(buffer) + 1);
+        strcat(compilerInfo, buffer);
+    }
+
+    pclose(fp);
+
+    return compilerInfo;
+}
+
+
+char* getNVCCInfo() {
+    char buffer[BUFFER_SIZE];
+    char* nvccInfo = (char *)malloc(1); // Allocate memory for the string
+    nvccInfo[0] = '\0'; // Ensure the string is properly terminated
+
+    FILE* fp = popen("nvcc --version", "r");
+    if (fp == NULL) {
+        printf("Failed to run command\n");
+        return NULL;
+    }
+
+    while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+        // Append the line to the nvccInfo string
+        nvccInfo = (char *)realloc(nvccInfo, strlen(nvccInfo) + strlen(buffer) + 1);
+        strcat(nvccInfo, buffer);
+    }
+
+    pclose(fp);
+
+    return nvccInfo;
+}
+
+
+char* getOSInfo() {
+    char buffer[BUFFER_SIZE];
+    char* osInfo = (char *)malloc(1); // Allocate memory for the string
+    osInfo[0] = '\0'; // Ensure the string is properly terminated
+
+    FILE* fp = popen("uname -a", "r");
+    if (fp == NULL) {
+        printf("Failed to run command\n");
+        return NULL;
+    }
+
+    while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+        // Append the line to the osInfo string
+        osInfo = (char *)realloc(osInfo, strlen(osInfo) + strlen(buffer) + 1);
+        strcat(osInfo, buffer);
+    }
+
+    pclose(fp);
+
+    return osInfo;
+}
 
 
 int main(int argc, char** argv) {
 
+    printf("Compiler information:\n");
+    char* compilerInfo = getCompilerInfo();
+    if (compilerInfo != NULL) {
+        printf("%s\n", compilerInfo);
+        free(compilerInfo); // Free the memory allocated for the string
+    }
+
+
+    printf("nvcc information:\n");
+    char* nvccInfo = getNVCCInfo();
+    if (nvccInfo != NULL) {
+        printf("%s\n", nvccInfo);
+        free(nvccInfo); // Free the memory allocated for the string
+    }
+
+
+    printf("Operating System information:\n");
+    char* osInfo = getOSInfo();
+    if (osInfo != NULL) {
+        printf("%s\n", osInfo);
+        free(osInfo); // Free the memory allocated for the string
+    }
+
+    
     // Selection of best device
     int device = setBestDevice();
     if (device == -1){
@@ -545,66 +557,25 @@ int main(int argc, char** argv) {
     int metric = 3; // Metric distance
     int exp = 4; // Power for Minkowski distance
 
-    Row *dataset;
-    int trainSize;
-    int testSize;
 
-    // TRAINING DATA
-    if (readCSV("diabetes_training.csv", &dataset, &trainSize) != 1) {
-        printf("Error reading CSV file.\n");
-        return 1;
-    }
-
-    // Allocate memory for trainData
-    double *trainData = (double *)malloc(trainSize * FEATURES * sizeof(double));
-    if (trainData == NULL) {
-        printf("Error allocating memory.\n");
-        free(dataset);
-        return 1;
-    }
-
-    // Allocate memory for train labels
-    int *trainLabels = (int *)malloc(trainSize * sizeof(int));
-    if (trainLabels == NULL) {
-        printf("Error allocating memory.\n");
-        free(dataset);
-        free(trainData);
-        return 1;
-    }
-
-    // Training data extraction
-    extractData(dataset, trainData, trainLabels, trainSize);
-    //printDataSet(trainData, trainLabels, numRows);
-
+    int trainSize = 1000; // Size of the dataset
+    int testSize = 100; // Size of the dataset
+    int num_features = 10; // Number of features (and classes)
+    int num_classes = num_features; // Number of classes
+    int mean = 10; // Mean value for class component
     
-    // TEST DATA
-    if (readCSV("diabetes_testing.csv", &dataset, &testSize) != 1) {
-        printf("Error reading CSV file.\n");
-        return 1;
-    }
+    // pointer to memory for data and labels
+    double *trainData;
+    int *trainLabels;
+    double *testData;
+    int *testLabels;
+    
+    // Generate training set
+    generateData(trainSize, num_features, &trainData, &trainLabels, mean);
+    // Generate test set
+    generateData(testSize, num_features, &testData, &testLabels, mean);
 
-    // Allocate memory for testData
-    double *testData = (double *)malloc(testSize * FEATURES * sizeof(double));
-    if (testData == NULL) {
-        printf("Error allocating memory.\n");
-        free(dataset);
-        return 1;
-    }
-
-    // Allocate memory for test labels
-    int *testLabels = (int*)malloc(testSize * sizeof(int));
-    if (testLabels == NULL) {
-        printf("Error allocating memory.\n");
-        free(dataset);
-        free(testData);
-        return 1;
-    }
-
-    // Test data extraction
-    extractData(dataset, testData, testLabels, testSize);
-    //printDataSet(testData, testLabels, testSize);
-
-
+    // Host memory allocation
     double *distances = (double *)malloc(trainSize * testSize * sizeof(double));
     int *trainIndexes = (int *)malloc(trainSize * testSize * sizeof(int));
     int *predictions = (int *)malloc(testSize * sizeof(int));
@@ -612,19 +583,19 @@ int main(int argc, char** argv) {
 
     createTrainIndexes(trainIndexes, testSize, trainSize);
 
-    // device
+    // device memory allocation
     double *d_trainData, *d_testData, *d_distances;
     int *d_trainIndexes, *d_predictions, *d_trainLabels;
 
-    cudaMalloc(&d_trainData, trainSize * FEATURES * sizeof(double));
-    cudaMalloc(&d_testData, testSize * FEATURES * sizeof(double));
+    cudaMalloc(&d_trainData, trainSize * num_features * sizeof(double));
+    cudaMalloc(&d_testData, testSize * num_features * sizeof(double));
     cudaMalloc(&d_distances, trainSize * testSize * sizeof(double));
     cudaMalloc(&d_trainIndexes, trainSize * testSize * sizeof(int));
     cudaMalloc(&d_predictions, testSize * sizeof(int));
     cudaMalloc(&d_trainLabels, trainSize * sizeof(int));
 
-    cudaMemcpy(d_trainData, trainData, trainSize * FEATURES * sizeof(double), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_testData, testData, testSize * FEATURES * sizeof(double), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_trainData, trainData, trainSize * num_features * sizeof(double), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_testData, testData, testSize * num_features * sizeof(double), cudaMemcpyHostToDevice);
     cudaMemcpy(d_trainIndexes, trainIndexes, trainSize * testSize * sizeof(int), cudaMemcpyHostToDevice);
     cudaMemcpy(d_trainLabels, trainLabels, trainSize * sizeof(int), cudaMemcpyHostToDevice);
     
@@ -639,12 +610,12 @@ int main(int argc, char** argv) {
     dim3 grid((trainSize + block.x-1)/block.x, (testSize + block.y-1)/block.y);
 
     cudaMemset(d_distances, 0, trainSize * testSize * sizeof(double)); // initialize distances matrix with 0
-    
+
     // Set cache configuration for the kernel -> prefer 48KB L1 cache and 16KB shared memory
     cudaFuncSetCacheConfig(knnDistances, cudaFuncCachePreferL1);
 
     double knnDistStart = cpuSecond();
-    knnDistances<<< grid, block >>>(d_trainData, d_testData, d_distances, trainSize, testSize, metric, exp);
+    knnDistances<<< grid, block >>>(d_trainData, d_testData, d_distances, trainSize, testSize, metric, exp, num_features);
     cudaDeviceSynchronize();        //forcing synchronous behavior
     double knnDistElaps = cpuSecond() - knnDistStart;
     
@@ -672,7 +643,7 @@ int main(int argc, char** argv) {
     int index = k * (blockDim.x + sharedWorkers); // starting index for trainIndexes in shared memory 
 
     double knnSortStart = cpuSecond();
-    knnSortPredict<<< gridDim, blockDim, sharedMemorySize>>>(d_distances, trainSize, d_trainIndexes, k, d_predictions, d_trainLabels, index, alpha, beta);
+    knnSortPredict<<< gridDim, blockDim, sharedMemorySize>>>(d_distances, trainSize, d_trainIndexes, k, d_predictions, d_trainLabels, index, alpha, beta, num_classes);
     cudaDeviceSynchronize();        //forcing synchronous behavior
     double knnSortElaps = cpuSecond() - knnSortStart;
 
@@ -680,7 +651,7 @@ int main(int argc, char** argv) {
     cudaMemcpy(trainIndexes, d_trainIndexes, trainSize * testSize * sizeof(int), cudaMemcpyDeviceToHost);
     cudaMemcpy(predictions, d_predictions, testSize * sizeof(int), cudaMemcpyDeviceToHost);
 
-    //printDataSet(trainData, trainLabels, trainSize);
+    //printDataSet(trainData, trainLabels, trainSize, num_features);
 
     //printDistances(distances, testSize, trainSize);
 
@@ -695,7 +666,7 @@ int main(int argc, char** argv) {
     unsigned int predDim[4] = {gridDim.x, gridDim.y, blockDim.x, blockDim.y};
 
     // Write results and device info to file
-    writeResultsToFile(testLabels, predictions, errorCount, testSize, "par_results.txt", trainSize, FEATURES, k, metric, exp, distDim, predDim, workers, alpha, beta, knnDistElaps, knnSortElaps); 
+    writeResultsToFile(testLabels, predictions, errorCount, testSize, "par_results_artificial.txt", trainSize, num_features, k, metric, exp, distDim, predDim, workers, alpha, beta, knnDistElaps, knnSortElaps); 
     writeDeviceInfo("device_info.txt", device);
 
     // Free device memory
@@ -708,7 +679,6 @@ int main(int argc, char** argv) {
 
 
     // Free host memory
-    free(dataset);
     free(trainData);
     free(trainLabels);
     free(testData);

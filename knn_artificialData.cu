@@ -517,6 +517,11 @@ int main(int argc, char** argv) {
     dim3 block(dimx, dimy);
     dim3 grid((trainSize + block.x-1)/block.x, (testSize + block.y-1)/block.y);
 
+    cudaMemset(d_distances, 0, trainSize * testSize * sizeof(double)); // initialize distances matrix with 0
+    
+    // Set cache configuration for the kernel -> prefer 48KB L1 cache and 16KB shared memory
+    cudaFuncSetCacheConfig(knnDistances, cudaFuncCachePreferL1);
+
     double knnDistStart = cpuSecond();
     knnDistances<<< grid, block >>>(d_trainData, d_testData, d_distances, trainSize, testSize, metric, exp, num_features);
     cudaDeviceSynchronize();        //forcing synchronous behavior
