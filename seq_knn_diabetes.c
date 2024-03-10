@@ -37,7 +37,7 @@ double cpuSecond(){
 
 
 // Compute distance between two points based on the selected metric
-double computeDistance(double *point1, double *point2, int metric) {
+double computeDistance(double *point1, double *point2, int metric, int exp) {
     double distance = 0.0;
     if (metric == 1) { // Euclidean distance
         for (int i = 0; i < FEATURES; i++) {
@@ -52,21 +52,11 @@ double computeDistance(double *point1, double *point2, int metric) {
     } else if (metric == 3) { // Minkowski distance with p = 3
         double sum = 0.0;
         for (int i = 0; i < FEATURES; i++) {
-            sum += pow(fabs(point1[i] - point2[i]), 3);
+            sum += pow(fabs(point1[i] - point2[i]), exp);
         }
-        distance = pow(sum, 1.0 / 3.0);
+        distance = pow(sum, 1.0 / (float)exp);
     }
     return distance;
-}
-
-
-// Function to calculate Euclidean distance between two vectors
-double distance(double *v1, double *v2, int dim) {
-    double sum = 0;
-    for (int i = 0; i < dim; i++) {
-        sum += pow(v2[i] - v1[i], 2);
-    }
-    return sqrt(sum);
 }
 
 
@@ -89,12 +79,12 @@ void bubble_sort(double *distances, int *indexes, int n) {
 
 // Function to perform KNN classification with bubble sort
 // n=trainSize, dim=FEATURES, m=testSize
-void knn_bubble(double *trainData, double *testData, double *distances, int trainSize, int testSize, int *indexes, int k, int metric, int *predictions, int *trainLabels){
+void knn_bubble(double *trainData, double *testData, double *distances, int trainSize, int testSize, int *indexes, int k, int metric, int exp, int *predictions, int *trainLabels){
 
     for (int q = 0; q < testSize; q++) {           // for each element in testSet
         for (int i = 0; i < trainSize; i++) {       // for each element in trainSet
             int idx = q * trainSize + i;
-            distances[idx] = computeDistance(&trainData[i * FEATURES], &testData[q * FEATURES], metric);
+            distances[idx] = computeDistance(&trainData[i * FEATURES], &testData[q * FEATURES], metric, exp);
         }
         bubble_sort(&distances[q * trainSize], &indexes[q * trainSize], trainSize);
 
@@ -121,7 +111,7 @@ void knn_bubble(double *trainData, double *testData, double *distances, int trai
 }
 
 
-void writeResultsToFile(int * trainLabels, int *results, int errorCount, int testSize, const char *filename, int trainSize, int features, int k, int metric, double time1) {
+void writeResultsToFile(int * trainLabels, int *results, int errorCount, int testSize, const char *filename, int trainSize, int features, int k, int metric, int exp, double time1) {
     FILE *file = fopen(filename, "w");
     if (file == NULL) {
         printf("Error opening file!\n");
@@ -144,7 +134,7 @@ void writeResultsToFile(int * trainLabels, int *results, int errorCount, int tes
     } else if (metric == 2) {
         fprintf(file, "Manhattan\n");
     } else if (metric == 3) {
-        fprintf(file, "Minkowski (p=3)\n");
+        fprintf(file, "Minkowski (p=%d)\n", exp);
     }
 
     fprintf(file, "\nNumber of prediction errors: %d\n", errorCount);
@@ -371,7 +361,8 @@ void printDistances(double *distances, int testSize, int trainSize){
 int main() {
 
     int k = 10; 
-    int metric = 1; // Metric distance
+    int metric = 3; // Metric distance
+    int exp = 4; // Exponent for Minkowski distance
 
     Row *dataset;
     int trainSize;
@@ -442,7 +433,7 @@ int main() {
 
 
     double knnStart = cpuSecond();
-    knn_bubble(trainData, testData, distances, trainSize, testSize, trainIndexes, k, metric, predictions, trainLabels);
+    knn_bubble(trainData, testData, distances, trainSize, testSize, trainIndexes, k, metric, exp, predictions, trainLabels);
     double knnElaps = cpuSecond() - knnStart;
 
 
@@ -459,7 +450,7 @@ int main() {
 
 
     // Write results and device info to file
-    writeResultsToFile(testLabels, predictions, errorCount, testSize, "seq_results.txt", trainSize, FEATURES, k, metric, knnElaps);
+    writeResultsToFile(testLabels, predictions, errorCount, testSize, "seq_results.txt", trainSize, FEATURES, k, metric, exp, knnElaps);
     const char *filename = "hardware_spec.txt";
     write_hardware_specification(filename);
 

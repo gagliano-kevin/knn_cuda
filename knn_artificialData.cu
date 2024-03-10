@@ -36,7 +36,7 @@ double cpuSecond(){
 
 
 // Compute distance between two points based on the selected metric
-__device__ double computeDistance(double *point1, double *point2, int metric, int num_features) {
+__device__ double computeDistance(double *point1, double *point2, int metric, int exp, int num_features) {
     double distance = 0.0;
     if (metric == 1) { // Euclidean distance
         for (int i = 0; i < num_features; i++) {
@@ -47,24 +47,24 @@ __device__ double computeDistance(double *point1, double *point2, int metric, in
         for (int i = 0; i < num_features; i++) {
             distance += fabs(point1[i] - point2[i]);
         }
-    } else if (metric == 3) { // Minkowski distance with p = 3
+    } else if (metric == 3) { // Minkowski distance with p = exp
         double sum = 0.0;
         for (int i = 0; i < num_features; i++) {
-            sum += pow(fabs(point1[i] - point2[i]), 3);
+            sum += pow(fabs(point1[i] - point2[i]), exp);
         }
-        distance = pow(sum, 1.0 / 3.0);
+        distance = pow(sum, 1.0 / (float)exp);
     }
     return distance;
 }
 
 
 // distances matrix has size testSize x TrainSize 
-__global__ void knnDistances(double *trainData, double *testData, double *distances, int trainSize, int testSize, int metric, int num_features) { //testSize and trainSize could be const
+__global__ void knnDistances(double *trainData, double *testData, double *distances, int trainSize, int testSize, int metric, int exp, int num_features) { 
     unsigned int ix = threadIdx.x + blockIdx.x * blockDim.x;
     unsigned int iy = threadIdx.y + blockIdx.y * blockDim.y;
     unsigned int idx = iy * trainSize + ix; 
     if(ix < trainSize && iy < testSize){
-        distances[idx]=computeDistance(&trainData[ix * num_features], &testData[iy * num_features], metric, num_features);
+        distances[idx]=computeDistance(&trainData[ix * num_features], &testData[iy * num_features], metric, exp, num_features);
     }
 }
 
@@ -202,7 +202,7 @@ extern "C" __global__ void knnSortPredict(double *distances, int trainSize, int 
 
 
 
-void writeResultsToFile(int * trainLabels, int *results, int errorCount, int testSize, const char *filename, int trainSize, int features, int k, int metric, unsigned int *distDim, unsigned int *predDim, int workers, int alpha, int beta, double kernelTime1, double kernelTime2) {
+void writeResultsToFile(int * trainLabels, int *results, int errorCount, int testSize, const char *filename, int trainSize, int features, int k, int metric, int exp, unsigned int *distDim, unsigned int *predDim, int workers, int alpha, int beta, double kernelTime1, double kernelTime2) {
     FILE *file = fopen(filename, "w");
     if (file == NULL) {
         printf("Error opening file!\n");
@@ -233,7 +233,7 @@ void writeResultsToFile(int * trainLabels, int *results, int errorCount, int tes
     } else if (metric == 2) {
         fprintf(file, "Manhattan\n");
     } else if (metric == 3) {
-        fprintf(file, "Minkowski (p=3)\n");
+        fprintf(file, "Minkowski (p=%d)\n", exp);
     }
 
     fprintf(file, "\nNumber of prediction errors: %d\n", errorCount);
@@ -422,7 +422,7 @@ void printDistances(double *distances, int testSize, int trainSize){
 }
 
 
-// Function to generate a training set
+// Function to generate a Dataset
 void generateData(int size, int num_features, double **data, int **labels, double mean) {
     // Allocate memory for data and labels
     *data = (double *)malloc(size * num_features * sizeof(double));
@@ -464,7 +464,8 @@ int main(int argc, char** argv) {
     }
 
     int k = 10; 
-    int metric = 1; // Metric distance
+    int metric = 3; // Metric distance
+    int exp = 4; // Power for Minkowski distance
 
 
     int trainSize = 1000; // Size of the dataset
@@ -519,7 +520,7 @@ int main(int argc, char** argv) {
     dim3 grid((trainSize + block.x-1)/block.x, (testSize + block.y-1)/block.y);
 
     double knnDistStart = cpuSecond();
-    knnDistances<<< grid, block >>>(d_trainData, d_testData, d_distances, trainSize, testSize, metric, num_features);
+    knnDistances<<< grid, block >>>(d_trainData, d_testData, d_distances, trainSize, testSize, metric, exp, num_features);
     cudaDeviceSynchronize();        //forcing synchronous behavior
     double knnDistElaps = cpuSecond() - knnDistStart;
     
@@ -570,7 +571,7 @@ int main(int argc, char** argv) {
     unsigned int predDim[4] = {gridDim.x, gridDim.y, blockDim.x, blockDim.y};
 
     // Write results and device info to file
-    writeResultsToFile(testLabels, predictions, errorCount, testSize, "par_results_artificial.txt", trainSize, num_features, k, metric, distDim, predDim, workers, alpha, beta, knnDistElaps, knnSortElaps); 
+    writeResultsToFile(testLabels, predictions, errorCount, testSize, "par_results_artificial.txt", trainSize, num_features, k, metric, exp, distDim, predDim, workers, alpha, beta, knnDistElaps, knnSortElaps); 
     writeDeviceInfo("device_info.txt", device);
 
     // Free device memory
