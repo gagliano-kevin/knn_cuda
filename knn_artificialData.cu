@@ -120,7 +120,6 @@ extern "C" __global__ void knnSortPredict(double *distances, int trainSize, int 
     __syncthreads();
 
 
-    ///
     int iter = 1;
     int workers = blockDim.x;
     trainSize = k * workers;
