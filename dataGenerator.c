@@ -3,9 +3,10 @@
 #include <time.h>
 
 // Function to generate a training set
-void generateData(int size, int num_features, double **data, int *labels, double mean) {
-    // Allocate memory for data
+void generateData(int size, int num_features, double **data, int **labels, double mean) {
+    // Allocate memory for data and labels
     *data = (double *)malloc(size * num_features * sizeof(double));
+    *labels = (int *)malloc(size * sizeof(int));
     
     // Generate training data
     double noise = 0.1; // Adjust this value to control noise level
@@ -27,7 +28,7 @@ void generateData(int size, int num_features, double **data, int *labels, double
         }
         
         // Assign label
-        labels[i] = class_index;
+        (*labels)[i] = class_index;
     }
 }
 
@@ -40,10 +41,9 @@ int main() {
     // Allocate memory for data and labels
     double *data;
     int *labels;
-    labels = (int *)malloc(size * sizeof(int));
     
     // Generate training set
-    generateData(size, num_features, &data, labels, mean);
+    generateData(size, num_features, &data, &labels, mean);
     
     // Print generated data and labels
     printf("Generated Data:\n");
