@@ -176,7 +176,6 @@ extern "C" __global__ void knnSortPredict(double *distances, int trainSize, int 
         bubbleSort(distances, indexes, 0, trainSize);
 
         // Nearest class election
-        //int classCounts[classes] = {0};
         int* classCounts = new int[classes];
         // Initialize all elements to zero
         for (int i = 0; i < classes; ++i) {
