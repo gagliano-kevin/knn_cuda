@@ -164,7 +164,7 @@ void write_hardware_specification(const char *filename) {
     fprintf(file, "Free RAM: %lu MB\n", sys_info.freeram / (1024 * 1024));
     fprintf(file, "Total Swap: %lu MB\n", sys_info.totalswap / (1024 * 1024));
     fprintf(file, "Free Swap: %lu MB\n", sys_info.freeswap / (1024 * 1024));
-    fprintf(file, "Number of CPUs: %d\n", sys_info.procs);
+    fprintf(file, "Number of procs: %d\n", sys_info.procs);
 
 
     fprintf(file, "\nCPU Information:\n");

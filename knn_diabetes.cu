@@ -10,6 +10,7 @@
 #include <cuda_runtime.h>
 #include <sys/time.h>
 #include <time.h>
+#include <sys/sysinfo.h>
 
 
 #define MAX_FIELD_LEN 20
@@ -528,7 +529,207 @@ void printDistances(double *distances, int testSize, int trainSize){
 }
 
 
+char* getCompilerInfo() {
+    char buffer[BUFFER_SIZE];
+    char* compilerInfo = (char *)malloc(1); // Allocate memory for the string
+    compilerInfo[0] = '\0'; // Ensure the string is properly terminated
 
+    FILE* fp = popen("gcc --version", "r");
+    if (fp == NULL) {
+        printf("Failed to run command\n");
+        return NULL;
+    }
+
+    while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+        // Append the line to the compilerInfo string
+        compilerInfo = (char *)realloc(compilerInfo, strlen(compilerInfo) + strlen(buffer) + 1);
+        strcat(compilerInfo, buffer);
+    }
+
+    pclose(fp);
+
+    return compilerInfo;
+}
+
+
+char* getNVCCInfo() {
+    char buffer[BUFFER_SIZE];
+    char* nvccInfo = (char *)malloc(1); // Allocate memory for the string
+    nvccInfo[0] = '\0'; // Ensure the string is properly terminated
+
+    FILE* fp = popen("nvcc --version", "r");
+    if (fp == NULL) {
+        printf("Failed to run command\n");
+        return NULL;
+    }
+
+    while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+        // Append the line to the nvccInfo string
+        nvccInfo = (char *)realloc(nvccInfo, strlen(nvccInfo) + strlen(buffer) + 1);        //
+        strcat(nvccInfo, buffer);
+    }
+
+    pclose(fp);
+
+    return nvccInfo;
+}
+
+
+char* getOSInfo() {
+    char buffer[BUFFER_SIZE];
+    char* osInfo = (char *)malloc(1); // Allocate memory for the string
+    osInfo[0] = '\0'; // Ensure the string is properly terminated
+
+    FILE* fp = popen("uname -a", "r");
+    if (fp == NULL) {
+        printf("Failed to run command\n");
+        return NULL;
+    }
+
+    while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+        osInfo = (char *)realloc(osInfo, strlen(osInfo) + strlen(buffer) + 1);      // Reallocate memory for the string
+        strcat(osInfo, buffer);    // Append the line to the osInfo string
+    }
+
+    pclose(fp);
+
+    return osInfo;
+}
+
+void writeAllInfoToFile(const char *filename, int device){
+    FILE *file = fopen(filename, "w");
+    if (file == NULL) {
+        printf("Error opening file!\n");
+        return;
+    }
+
+    int dev, driverVersion = 0, runtimeVersion = 0;
+
+    dev = device;
+    cudaDeviceProp deviceProp;
+    CHECK(cudaGetDeviceProperties(&deviceProp, dev));
+    fprintf(file, "Device %d: \"%s\"\n", dev, deviceProp.name);
+
+    CHECK(cudaDriverGetVersion(&driverVersion));
+    CHECK(cudaRuntimeGetVersion(&runtimeVersion));
+
+    fprintf(file, "CUDA Driver Version / Runtime Version %d.%d / %d.%d\n",
+    driverVersion/1000, (driverVersion%100)/10,
+    runtimeVersion/1000, (runtimeVersion%100)/10);
+
+    fprintf(file, "CUDA Capability Major/Minor version number: %d.%d\n",
+    deviceProp.major, deviceProp.minor);
+
+    fprintf(file, "Total amount of global memory: %.2f GBytes (%llu bytes)\n",
+    (float)deviceProp.totalGlobalMem/(pow(1024.0,3)),
+    (unsigned long long) deviceProp.totalGlobalMem);
+
+    fprintf(file, "GPU Clock rate: %.0f MHz (%0.2f GHz)\n",
+    deviceProp.clockRate * 1e-3f, deviceProp.clockRate * 1e-6f);
+
+    fprintf(file, "Memory Clock rate: %.0f Mhz\n", deviceProp.memoryClockRate * 1e-3f);
+
+    fprintf(file, "Memory Bus Width: %d-bit\n", deviceProp.memoryBusWidth);
+
+    if (deviceProp.l2CacheSize) {
+        fprintf(file, "L2 Cache Size: %d bytes\n", deviceProp.l2CacheSize);
+    }
+
+    fprintf(file, "Max Texture Dimension Size (x,y,z) "
+    " 1D=(%d), 2D=(%d,%d), 3D=(%d,%d,%d)\n",
+    deviceProp.maxTexture1D, deviceProp.maxTexture2D[0],
+    deviceProp.maxTexture2D[1], deviceProp.maxTexture3D[0], 
+    deviceProp.maxTexture3D[1], deviceProp.maxTexture3D[2]);
+
+    fprintf(file, "Max Layered Texture Size (dim) x layers 1D=(%d) x %d, 2D=(%d,%d) x %d\n",
+    deviceProp.maxTexture1DLayered[0], deviceProp.maxTexture1DLayered[1],
+    deviceProp.maxTexture2DLayered[0], deviceProp.maxTexture2DLayered[1],
+    deviceProp.maxTexture2DLayered[2]);
+
+    fprintf(file, "Total amount of constant memory: %lu bytes\n", deviceProp.totalConstMem);
+    
+    fprintf(file, "Total amount of shared memory per block: %lu bytes\n", deviceProp.sharedMemPerBlock);
+    
+    fprintf(file, "Total number of registers available per block: %d\n",  deviceProp.regsPerBlock);
+    
+    fprintf(file, "Warp size: %d\n", deviceProp.warpSize);
+    
+    fprintf(file, "Maximum number of threads per multiprocessor: %d\n", deviceProp.maxThreadsPerMultiProcessor);
+    
+    fprintf(file, "Maximum number of threads per block: %d\n", deviceProp.maxThreadsPerBlock);
+    
+    fprintf(file, "Maximum sizes of each dimension of a block: %d x %d x %d\n",
+    deviceProp.maxThreadsDim[0], deviceProp.maxThreadsDim[1], deviceProp.maxThreadsDim[2]);
+    
+    fprintf(file, "Maximum sizes of each dimension of a grid: %d x %d x %d\n",
+    deviceProp.maxGridSize[0], deviceProp.maxGridSize[1], deviceProp.maxGridSize[2]);
+    
+    fprintf(file, "Maximum memory pitch: %lu bytes\n", deviceProp.memPitch);
+
+    fprintf(file, "\n\n");
+
+    fprintf(file, "Compiler information:\n");
+    char* compilerInfo = getCompilerInfo();
+    if (compilerInfo != NULL) {
+        fprintf(file, "%s\n", compilerInfo);
+        free(compilerInfo); // Free the memory allocated for the string
+    }
+
+    fprintf(file, "nvcc information:\n");
+    char* nvccInfo = getNVCCInfo();
+    if (nvccInfo != NULL) {
+        fprintf(file, "%s\n", nvccInfo);
+        free(nvccInfo); // Free the memory allocated for the string
+    }
+
+    fprintf(file, "Operating System information:\n");
+    char* osInfo = getOSInfo();
+    if (osInfo != NULL) {
+        fprintf(file, "%s\n", osInfo);
+        free(osInfo); // Free the memory allocated for the string
+    }
+
+    fprintf(file, "\n\n");
+
+
+    // Get system information
+    struct sysinfo sys_info;
+    if (sysinfo(&sys_info) != 0) {
+        printf("Error getting system information.\n");
+        fclose(file);
+        return;
+    }
+
+    // Write hardware specification to file
+    fprintf(file, "System Information:\n");
+    fprintf(file, "--------------------\n");
+    fprintf(file, "Total RAM: %lu MB\n", sys_info.totalram / (1024 * 1024));
+    fprintf(file, "Free RAM: %lu MB\n", sys_info.freeram / (1024 * 1024));
+    fprintf(file, "Total Swap: %lu MB\n", sys_info.totalswap / (1024 * 1024));
+    fprintf(file, "Free Swap: %lu MB\n", sys_info.freeswap / (1024 * 1024));
+    fprintf(file, "Number of procs: %d\n", sys_info.procs);
+
+
+    fprintf(file, "\nCPU Information:\n");
+    fprintf(file, "----------------\n");
+
+    FILE *cpuinfo = fopen("/proc/cpuinfo", "r");
+    if (cpuinfo == NULL) {
+        printf("Error opening CPU info file.\n");
+        fclose(file);
+        return;
+    }
+
+    char line[256];
+    while (fgets(line, sizeof(line), cpuinfo)) {
+        fputs(line, file);
+    }
+
+    fclose(cpuinfo);
+    fclose(file);
+
+    printf("\nHardware specification has been written to %s\n", filename);
+}
 
 
 
@@ -696,7 +897,8 @@ int main(int argc, char** argv) {
 
     // Write results and device info to file
     writeResultsToFile(testLabels, predictions, errorCount, testSize, "par_results.txt", trainSize, FEATURES, k, metric, exp, distDim, predDim, workers, alpha, beta, knnDistElaps, knnSortElaps); 
-    writeDeviceInfo("device_info.txt", device);
+    //writeDeviceInfo("device_info.txt", device);
+    writeAllInfoToFile("all_HW_info.txt", device);
 
     // Free device memory
     cudaFree(d_trainData);
