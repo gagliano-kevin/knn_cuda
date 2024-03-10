@@ -11,6 +11,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include <sys/sysinfo.h>
+#include <sys/stat.h>
 
 #define BUFFER_SIZE 256
 #define FILE_NAME __FILE__
@@ -201,8 +202,27 @@ extern "C" __global__ void knnSortPredict(double *distances, int trainSize, int 
 
 
 
+int create_directory(const char* dirname) {
+    // Attempt to create the directory
+    if(mkdir(dirname, 0777) == 0) {
+        printf("Directory created successfully.\n");
+        return 1; // Return 1 to indicate success
+    } else {
+        printf("Failed to create directory.\n");
+        return 0; // Return 0 to indicate failure
+    }
+}
+
+
 void writeResultsToFile(int * trainLabels, int *results, int errorCount, int testSize, const char *filename, int trainSize, int features, int k, int metric, int exp, unsigned int *distDim, unsigned int *predDim, int workers, int alpha, int beta, double kernelTime1, double kernelTime2) {
-    FILE *file = fopen(filename, "w");
+    const char* dirname = "results/"; 
+    
+    create_directory(dirname); 
+
+    char path[256]; // Assuming max path length of 256 characters
+    snprintf(path, sizeof(path), "%s%s", dirname, filename);
+    
+    FILE *file = fopen(path, "w");
     if (file == NULL) {
         printf("Error opening file!\n");
         return;
@@ -519,8 +539,16 @@ char* getOSInfo() {
     return osInfo;
 }
 
+
 void writeAllInfoToFile(const char *filename, int device){
-    FILE *file = fopen(filename, "w");
+
+    const char* dirname = "hw_info/"; 
+    
+    create_directory(dirname); 
+
+    char path[256]; // Assuming max path length of 256 characters
+    snprintf(path, sizeof(path), "%s%s", dirname, filename);
+    FILE *file = fopen(path, "w");
     if (file == NULL) {
         printf("Error opening file!\n");
         return;
@@ -651,8 +679,10 @@ void writeAllInfoToFile(const char *filename, int device){
     fclose(cpuinfo);
     fclose(file);
 
-    printf("\nHardware specification has been written to %s\n", filename);
+    printf("\nHardware specification has been written to %s\n", path);
 }
+
+
 
 int main(int argc, char** argv) {
 
