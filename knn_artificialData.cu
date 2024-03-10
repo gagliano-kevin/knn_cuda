@@ -11,8 +11,7 @@
 #include <sys/time.h>
 #include <time.h>
 
-#define CLASSES 5
-#define FEATURES 5
+
 #define FILE_NAME __FILE__
 #define LINE __LINE__
 
@@ -37,20 +36,20 @@ double cpuSecond(){
 
 
 // Compute distance between two points based on the selected metric
-__device__ double computeDistance(double *point1, double *point2, int metric) {
+__device__ double computeDistance(double *point1, double *point2, int metric, int num_features) {
     double distance = 0.0;
     if (metric == 1) { // Euclidean distance
-        for (int i = 0; i < FEATURES; i++) {
+        for (int i = 0; i < num_features; i++) {
             distance += (point1[i] - point2[i]) * (point1[i] - point2[i]);
         }
         distance = sqrt(distance);
     } else if (metric == 2) { // Manhattan distance
-        for (int i = 0; i < FEATURES; i++) {
+        for (int i = 0; i < num_features; i++) {
             distance += fabs(point1[i] - point2[i]);
         }
     } else if (metric == 3) { // Minkowski distance with p = 3
         double sum = 0.0;
-        for (int i = 0; i < FEATURES; i++) {
+        for (int i = 0; i < num_features; i++) {
             sum += pow(fabs(point1[i] - point2[i]), 3);
         }
         distance = pow(sum, 1.0 / 3.0);
@@ -60,12 +59,12 @@ __device__ double computeDistance(double *point1, double *point2, int metric) {
 
 
 // distances matrix has size testSize x TrainSize 
-__global__ void knnDistances(double *trainData, double *testData, double *distances, int trainSize, int testSize, int metric) { //testSize and trainSize could be const
+__global__ void knnDistances(double *trainData, double *testData, double *distances, int trainSize, int testSize, int metric, int num_features) { //testSize and trainSize could be const
     unsigned int ix = threadIdx.x + blockIdx.x * blockDim.x;
     unsigned int iy = threadIdx.y + blockIdx.y * blockDim.y;
     unsigned int idx = iy * trainSize + ix; 
     if(ix < trainSize && iy < testSize){
-        distances[idx]=computeDistance(&trainData[ix * FEATURES], &testData[iy * FEATURES], metric);
+        distances[idx]=computeDistance(&trainData[ix * num_features], &testData[iy * num_features], metric, num_features);
     }
 }
 
@@ -91,7 +90,8 @@ __device__ void bubbleSort(double *distances, int *indexes, int startIdx, int en
 }
 
 
-__global__ void knnSortPredict(double *distances, int trainSize, int *indexes, int k, int *predictions, int *trainLabels, int sharedMemoryIdx, int alpha, int beta) {
+// exter "C" is used to avoid name mangling
+extern "C" __global__ void knnSortPredict(double *distances, int trainSize, int *indexes, int k, int *predictions, int *trainLabels, int sharedMemoryIdx, int alpha, int beta, int classes) {
     int row = blockIdx.x;
     int portion = (int)trainSize / blockDim.x;
 
@@ -177,20 +177,26 @@ __global__ void knnSortPredict(double *distances, int trainSize, int *indexes, i
         bubbleSort(distances, indexes, 0, trainSize);
 
         // Nearest class election
-        int classCounts[CLASSES] = {0};
+        //int classCounts[classes] = {0};
+        int* classCounts = new int[classes];
+        // Initialize all elements to zero
+        for (int i = 0; i < classes; ++i) {
+            classCounts[i] = 0;
+        }
         for (int i = 0; i < k; i++){        
             classCounts[trainLabels[indexes[i]]]++;
         }
 
         int max = 0; 
         int maxClass = -1;
-        for (int i = 0; i < CLASSES; i++){        
+        for (int i = 0; i < classes; i++){        
             if(classCounts[i] > max){
                 max = classCounts[i];
                 maxClass = i;
             }
         }
         predictions[row] = maxClass;
+        delete[] classCounts;
     }
 }
 
@@ -369,11 +375,11 @@ int checkResult(int *labels, int *predictions, const int N){
 }
 
 
-void printDataSet(double *trainData, int *trainLabels, int trainSize){
+void printDataSet(double *trainData, int *trainLabels, int trainSize, int num_features){
     for(int i = 0; i < trainSize; i++){
         printf("Data[%d]", i);
-        for(int j = 0; j < FEATURES; j++){
-            int idx = i * FEATURES + j;
+        for(int j = 0; j < num_features; j++){
+            int idx = i * num_features + j;
             printf("%9.3f", trainData[idx]);
         }
         printf(" -> label: %d\n\n", trainLabels[i]);
@@ -461,9 +467,10 @@ int main(int argc, char** argv) {
     int metric = 1; // Metric distance
 
 
-    int trainSize = 100; // Size of the dataset
-    int testSize = 10; // Size of the dataset
-    int num_features = 5; // Number of features (and classes)
+    int trainSize = 1000; // Size of the dataset
+    int testSize = 100; // Size of the dataset
+    int num_features = 10; // Number of features (and classes)
+    int num_classes = num_features; // Number of classes
     int mean = 10; // Mean value for class component
     
     // pointer to memory for data and labels
@@ -489,15 +496,15 @@ int main(int argc, char** argv) {
     double *d_trainData, *d_testData, *d_distances;
     int *d_trainIndexes, *d_predictions, *d_trainLabels;
 
-    cudaMalloc(&d_trainData, trainSize * FEATURES * sizeof(double));
-    cudaMalloc(&d_testData, testSize * FEATURES * sizeof(double));
+    cudaMalloc(&d_trainData, trainSize * num_features * sizeof(double));
+    cudaMalloc(&d_testData, testSize * num_features * sizeof(double));
     cudaMalloc(&d_distances, trainSize * testSize * sizeof(double));
     cudaMalloc(&d_trainIndexes, trainSize * testSize * sizeof(int));
     cudaMalloc(&d_predictions, testSize * sizeof(int));
     cudaMalloc(&d_trainLabels, trainSize * sizeof(int));
 
-    cudaMemcpy(d_trainData, trainData, trainSize * FEATURES * sizeof(double), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_testData, testData, testSize * FEATURES * sizeof(double), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_trainData, trainData, trainSize * num_features * sizeof(double), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_testData, testData, testSize * num_features * sizeof(double), cudaMemcpyHostToDevice);
     cudaMemcpy(d_trainIndexes, trainIndexes, trainSize * testSize * sizeof(int), cudaMemcpyHostToDevice);
     cudaMemcpy(d_trainLabels, trainLabels, trainSize * sizeof(int), cudaMemcpyHostToDevice);
     
@@ -512,7 +519,7 @@ int main(int argc, char** argv) {
     dim3 grid((trainSize + block.x-1)/block.x, (testSize + block.y-1)/block.y);
 
     double knnDistStart = cpuSecond();
-    knnDistances<<< grid, block >>>(d_trainData, d_testData, d_distances, trainSize, testSize, metric);
+    knnDistances<<< grid, block >>>(d_trainData, d_testData, d_distances, trainSize, testSize, metric, num_features);
     cudaDeviceSynchronize();        //forcing synchronous behavior
     double knnDistElaps = cpuSecond() - knnDistStart;
     
@@ -540,7 +547,7 @@ int main(int argc, char** argv) {
     int index = k * (blockDim.x + sharedWorkers); // starting index for trainIndexes in shared memory 
 
     double knnSortStart = cpuSecond();
-    knnSortPredict<<< gridDim, blockDim, sharedMemorySize>>>(d_distances, trainSize, d_trainIndexes, k, d_predictions, d_trainLabels, index, alpha, beta);
+    knnSortPredict<<< gridDim, blockDim, sharedMemorySize>>>(d_distances, trainSize, d_trainIndexes, k, d_predictions, d_trainLabels, index, alpha, beta, num_classes);
     cudaDeviceSynchronize();        //forcing synchronous behavior
     double knnSortElaps = cpuSecond() - knnSortStart;
 
@@ -548,7 +555,7 @@ int main(int argc, char** argv) {
     cudaMemcpy(trainIndexes, d_trainIndexes, trainSize * testSize * sizeof(int), cudaMemcpyDeviceToHost);
     cudaMemcpy(predictions, d_predictions, testSize * sizeof(int), cudaMemcpyDeviceToHost);
 
-    //printDataSet(trainData, trainLabels, trainSize);
+    //printDataSet(trainData, trainLabels, trainSize, num_features);
 
     //printDistances(distances, testSize, trainSize);
 
@@ -563,7 +570,7 @@ int main(int argc, char** argv) {
     unsigned int predDim[4] = {gridDim.x, gridDim.y, blockDim.x, blockDim.y};
 
     // Write results and device info to file
-    writeResultsToFile(testLabels, predictions, errorCount, testSize, "par_results_artificial.txt", trainSize, FEATURES, k, metric, distDim, predDim, workers, alpha, beta, knnDistElaps, knnSortElaps); 
+    writeResultsToFile(testLabels, predictions, errorCount, testSize, "par_results_artificial.txt", trainSize, num_features, k, metric, distDim, predDim, workers, alpha, beta, knnDistElaps, knnSortElaps); 
     writeDeviceInfo("device_info.txt", device);
 
     // Free device memory
