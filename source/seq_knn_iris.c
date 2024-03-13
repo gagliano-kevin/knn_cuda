@@ -12,7 +12,7 @@ int main() {
     int trainSize;
 
     // Read the Iris dataset
-    if (readIrisDataset("../../datasets/Iris.csv", &iris_data, &trainSize) != 0) {
+    if (readIrisDataset("../datasets/Iris.csv", &iris_data, &trainSize) != 0) {
         fprintf(stderr, "Error reading Iris dataset\n");
         return 1;
     }

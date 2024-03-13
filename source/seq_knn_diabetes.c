@@ -12,7 +12,7 @@ int main() {
     int testSize;
 
     // TRAINING DATA
-    if (readCSV("../../datasets/diabetes_training.csv", &dataset, &trainSize) != 1) {
+    if (readCSV("../datasets/diabetes_training.csv", &dataset, &trainSize) != 1) {
         printf("Error reading CSV file.\n");
         return 1;
     }
@@ -40,7 +40,7 @@ int main() {
 
     
     // TEST DATA
-    if (readCSV("../../datasets/diabetes_testing.csv", &dataset, &testSize) != 1) {
+    if (readCSV("../datasets/diabetes_testing.csv", &dataset, &testSize) != 1) {
         printf("Error reading CSV file.\n");
         return 1;
     }

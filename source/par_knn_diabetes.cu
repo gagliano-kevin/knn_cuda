@@ -1,5 +1,6 @@
 #include "../include/cuda_functions.h"
-#include "../include/iris_functions.h"
+#include "../include/diabetes_functions.h"
+
 
 int main(int argc, char** argv) {
 
@@ -10,37 +11,71 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    int k = 5; // k = 5
+    int k = 10; 
     int metric = 3; // Metric distance
     int exp = 4; // Power for Minkowski distance
 
-    IrisData *iris_data;
+    Row *dataset;
     int trainSize;
+    int testSize;
 
-    // Read the Iris dataset
-    if (readIrisDataset("../../datasets/Iris.csv", &iris_data, &trainSize) != 0) {
-        fprintf(stderr, "Error reading Iris dataset\n");
+    // TRAINING DATA
+    if (readCSV("../datasets/diabetes_training.csv", &dataset, &trainSize) != 1) {
+        printf("Error reading CSV file.\n");
         return 1;
     }
 
-    int testSize = trainSize/3;
-
+    // Allocate memory for trainData
     double *trainData = (double *)malloc(trainSize * FEATURES * sizeof(double));
+    if (trainData == NULL) {
+        printf("Error allocating memory.\n");
+        free(dataset);
+        return 1;
+    }
+
+    // Allocate memory for train labels
     int *trainLabels = (int *)malloc(trainSize * sizeof(int));
+    if (trainLabels == NULL) {
+        printf("Error allocating memory.\n");
+        free(dataset);
+        free(trainData);
+        return 1;
+    }
 
-    createTrainingSet(iris_data, trainData, trainLabels, trainSize);
+    // Training data extraction
+    extractData(dataset, trainData, trainLabels, trainSize);
+    //printDataSet(trainData, trainLabels, numRows);
 
-    // Test set (1/3 of training set, balanced over classes -> 17,17,16)
-    size_t testDataSize = (trainSize / 3) * FEATURES * sizeof(double);
-    size_t testLabelsSize = (trainSize / 3) * sizeof(int);
     
-    double *testData = (double *)malloc(testDataSize);
-    int *testLabels = (int *)malloc(testLabelsSize);
-    
-    createTestSet(trainData, testData, trainLabels, testLabels, trainSize);
+    // TEST DATA
+    if (readCSV("../datasets/diabetes_testing.csv", &dataset, &testSize) != 1) {
+        printf("Error reading CSV file.\n");
+        return 1;
+    }
+
+    // Allocate memory for testData
+    double *testData = (double *)malloc(testSize * FEATURES * sizeof(double));
+    if (testData == NULL) {
+        printf("Error allocating memory.\n");
+        free(dataset);
+        return 1;
+    }
+
+    // Allocate memory for test labels
+    int *testLabels = (int*)malloc(testSize * sizeof(int));
+    if (testLabels == NULL) {
+        printf("Error allocating memory.\n");
+        free(dataset);
+        free(testData);
+        return 1;
+    }
+
+    // Test data extraction
+    extractData(dataset, testData, testLabels, testSize);
+    //printDataSet(testData, testLabels, testSize);
+
 
     double *distances = (double *)malloc(trainSize * testSize * sizeof(double));
-
     int *trainIndexes = (int *)malloc(trainSize * testSize * sizeof(int));
     int *predictions = (int *)malloc(testSize * sizeof(int));
 
@@ -95,7 +130,7 @@ int main(int argc, char** argv) {
         alpha = atoi(argv[4]);
     }
 
-    int beta = 4;
+    int beta = 4;   // default
     if(argc > 5){
         beta = atoi(argv[5]);
     }
@@ -144,7 +179,7 @@ int main(int argc, char** argv) {
 
 
     // Free host memory
-    free(iris_data);
+    free(dataset);
     free(trainData);
     free(trainLabels);
     free(testData);
