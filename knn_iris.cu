@@ -13,7 +13,7 @@
 #include <time.h>
 #include <sys/sysinfo.h>
 
-
+#define BUFFER_SIZE 256
 #define MAX_LINE_SIZE 1024
 #define MAX_FIELD_SIZE 128
 #define NUM_FIELDS 6    // Id, SepalLengthCm, SepalWidthCm, PetalLengthCm, PetalWidthCm, Species

@@ -12,7 +12,7 @@
 #include <time.h>
 #include <sys/sysinfo.h>
 
-
+#define BUFFER_SIZE 256
 #define MAX_FIELD_LEN 20
 #define MAX_FIELDS 9
 #define FEATURES 8
