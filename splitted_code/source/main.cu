@@ -1,22 +1,7 @@
 // main.c
-#include <stdio.h>
-#include "../include/functions.h"
+
 #include "../include/cuda_kernels.h"
 
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-#include <math.h>
-#include <cuda_runtime.h>
-#include <sys/time.h>
-#include <time.h>
-#include <sys/sysinfo.h>
-
-#define FILE_NAME __FILE__
-#define LINE __LINE__
-#define BUFFER_SIZE 256
 
 
 
