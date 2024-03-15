@@ -49,7 +49,7 @@ void bubble_sort(double *distances, int *indexes, int n) {
 
 // Function to perform KNN classification with bubble sort
 // n=trainSize, dim=FEATURES, m=testSize
-void knn_bubble(double *trainData, double *testData, double *distances, int trainSize, int testSize, int *indexes, int k, int metric, int exp, int *predictions, int *trainLabels, int num_features, int classes){
+void knn(double *trainData, double *testData, double *distances, int trainSize, int testSize, int *indexes, int k, int metric, int exp, int *predictions, int *trainLabels, int num_features, int classes){
 
     for (int q = 0; q < testSize; q++) {           // for each element in testSet
         for (int i = 0; i < trainSize; i++) {       // for each element in trainSet
@@ -88,7 +88,7 @@ void knn_bubble(double *trainData, double *testData, double *distances, int trai
 
 void writeResultsToFile(int * trainLabels, int *results, int errorCount, int testSize, const char *filename, const char *dirname, int trainSize, int features, int k, int metric, int exp, double time1) {
     
-    create_directory(dirname); 
+    createDirectory(dirname); 
 
     char path[256]; // Assuming max path length of 256 characters
     snprintf(path, sizeof(path), "%s%s", dirname, filename);
@@ -131,13 +131,16 @@ void writeResultsToFile(int * trainLabels, int *results, int errorCount, int tes
     }
 
     fclose(file);
+
+    printf("Execution results has been written to %s\n\n", path);
 }
 
 
 void writeAllInfoToFile(const char *filename) {
-        const char* dirname = "seq_hw_info/"; 
+        
+    const char* dirname = "seq_hw_info/"; 
     
-    create_directory(dirname); 
+    createDirectory(dirname); 
 
     char path[256]; // Assuming max path length of 256 characters
     snprintf(path, sizeof(path), "%s%s", dirname, filename);
@@ -201,7 +204,7 @@ void writeAllInfoToFile(const char *filename) {
     fclose(cpuinfo);
     fclose(file);
 
-    printf("Hardware specification has been written to %s\n", path);
+    printf("Hardware specification has been written to %s\n\n", path);
 }
 
 

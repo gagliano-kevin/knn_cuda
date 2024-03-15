@@ -191,7 +191,7 @@ extern "C" __global__ void knnSortPredict(double *distances, int trainSize, int 
 
 void writeResultsToFile(int * trainLabels, int *results, int errorCount, int testSize, const char *filename, const char *dirname, int trainSize, int features, int k, int metric, int exp, unsigned int *distDim, unsigned int *predDim, int workers, int alpha, int beta, double kernelTime1, double kernelTime2) {
     
-    create_directory(dirname); 
+    createDirectory(dirname); 
 
     char path[256]; // Assuming max path length of 256 characters
     snprintf(path, sizeof(path), "%s%s", dirname, filename);
@@ -242,6 +242,8 @@ void writeResultsToFile(int * trainLabels, int *results, int errorCount, int tes
     }
 
     fclose(file);
+
+    printf("Execution results has been written to %s\n\n", path);
 }
 
 
@@ -362,7 +364,7 @@ void writeAllInfoToFile(const char *filename, int device){
 
     const char* dirname = "par_hw_info/"; 
     
-    create_directory(dirname); 
+    createDirectory(dirname); 
 
     char path[256]; // Assuming max path length of 256 characters
     snprintf(path, sizeof(path), "%s%s", dirname, filename);
@@ -497,7 +499,7 @@ void writeAllInfoToFile(const char *filename, int device){
     fclose(cpuinfo);
     fclose(file);
 
-    printf("\nHardware specification has been written to %s\n", path);
+    printf("\nHardware specification has been written to %s\n\n", path);
 }
 
 

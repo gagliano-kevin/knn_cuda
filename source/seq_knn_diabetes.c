@@ -74,6 +74,7 @@ int main() {
 
     createTrainIndexes(trainIndexes, testSize, trainSize);
 
+    printf("Executing file: %s\n\n", __FILE__);
 
     double knnStart = cpuSecond();
     knn(trainData, testData, distances, trainSize, testSize, trainIndexes, k, metric, exp, predictions, trainLabels, FEATURES, CLASSES);

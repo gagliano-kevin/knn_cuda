@@ -179,10 +179,10 @@ char* getOSInfo() {
 }
 
 
-int create_directory(const char* dirname) {
+int createDirectory(const char* dirname) {
     // Attempt to create the directory
     if(mkdir(dirname, 0777) == 0) {
-        printf("Directory created successfully.\n");
+        //printf("Directory created successfully.\n");
         return 1; // Return 1 to indicate success
     } else {
         printf("Failed to create directory.\n");
