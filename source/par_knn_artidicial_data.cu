@@ -101,10 +101,10 @@ int main(int argc, char** argv) {
 
     int index = k * (blockDim.x + sharedWorkers); // starting index for trainIndexes in shared memory 
 
-    double knnSortStart = cpuSecond();
-    knnSortPredict<<< gridDim, blockDim, sharedMemorySize>>>(d_distances, trainSize, d_trainIndexes, k, d_predictions, d_trainLabels, index, alpha, beta, num_classes);
+    double knnStart = cpuSecond();
+    knn<<< gridDim, blockDim, sharedMemorySize>>>(d_distances, trainSize, d_trainIndexes, k, d_predictions, d_trainLabels, index, alpha, beta, num_classes);
     cudaDeviceSynchronize();        //forcing synchronous behavior
-    double knnSortElaps = cpuSecond() - knnSortStart;
+    double knnElaps = cpuSecond() - knnStart;
 
     cudaMemcpy(distances, d_distances, trainSize * testSize * sizeof(double), cudaMemcpyDeviceToHost);
     cudaMemcpy(trainIndexes, d_trainIndexes, trainSize * testSize * sizeof(int), cudaMemcpyDeviceToHost);
@@ -125,7 +125,7 @@ int main(int argc, char** argv) {
     unsigned int predDim[4] = {gridDim.x, gridDim.y, blockDim.x, blockDim.y};
 
     // Write results and device info to file
-    writeResultsToFile(testLabels, predictions, errorCount, testSize, "par_results_artificial.txt", "par_results_artificial/", trainSize, num_features, k, metric, exp, distDim, predDim, workers, alpha, beta, knnDistElaps, knnSortElaps); 
+    writeResultsToFile(testLabels, predictions, errorCount, testSize, "par_results_artificial.txt", "par_results_artificial/", trainSize, num_features, k, metric, exp, distDim, predDim, workers, alpha, beta, knnDistElaps, knnElaps); 
     //writeDeviceInfo("device_info.txt", device);
     writeAllInfoToFile("all_HW_info.txt", device);
 

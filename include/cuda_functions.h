@@ -80,7 +80,7 @@ __device__ void bubbleSort(double *distances, int *indexes, int startIdx, int en
 
 
 // exter "C" is used to avoid name mangling
-extern "C" __global__ void knnSortPredict(double *distances, int trainSize, int *indexes, int k, int *predictions, int *trainLabels, int sharedMemoryIdx, int alpha, int beta, int classes) {
+extern "C" __global__ void knn(double *distances, int trainSize, int *indexes, int k, int *predictions, int *trainLabels, int sharedMemoryIdx, int alpha, int beta, int classes) {
     int row = blockIdx.x;
     int portion = (int)trainSize / blockDim.x;
 
