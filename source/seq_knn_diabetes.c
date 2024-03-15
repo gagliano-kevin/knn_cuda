@@ -76,7 +76,7 @@ int main() {
 
 
     double knnStart = cpuSecond();
-    knn_bubble(trainData, testData, distances, trainSize, testSize, trainIndexes, k, metric, exp, predictions, trainLabels, FEATURES, CLASSES);
+    knn(trainData, testData, distances, trainSize, testSize, trainIndexes, k, metric, exp, predictions, trainLabels, FEATURES, CLASSES);
     double knnElaps = cpuSecond() - knnStart;
 
 

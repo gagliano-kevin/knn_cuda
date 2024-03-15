@@ -32,8 +32,10 @@ int main() {
 
     createTrainIndexes(trainIndexes, testSize, trainSize);
 
+    printf("Executing file: %s\n\n", __FILE__);
+
     double knnStart = cpuSecond();
-    knn_bubble(trainData, testData, distances, trainSize, testSize, trainIndexes, k, metric, exp, predictions, trainLabels, num_features, num_classes);
+    knn(trainData, testData, distances, trainSize, testSize, trainIndexes, k, metric, exp, predictions, trainLabels, num_features, num_classes);
     double knnElaps = cpuSecond() - knnStart;
 
 
