@@ -86,8 +86,14 @@ void knn_bubble(double *trainData, double *testData, double *distances, int trai
 }
 
 
-void writeResultsToFile(int * trainLabels, int *results, int errorCount, int testSize, const char *filename, int trainSize, int features, int k, int metric, int exp, double time1) {
-    FILE *file = fopen(filename, "w");
+void writeResultsToFile(int * trainLabels, int *results, int errorCount, int testSize, const char *filename, const char *dirname, int trainSize, int features, int k, int metric, int exp, double time1) {
+    
+    create_directory(dirname); 
+
+    char path[256]; // Assuming max path length of 256 characters
+    snprintf(path, sizeof(path), "%s%s", dirname, filename);
+
+    FILE *file = fopen(path, "w");
     if (file == NULL) {
         printf("Error opening file!\n");
         return;
@@ -128,12 +134,36 @@ void writeResultsToFile(int * trainLabels, int *results, int errorCount, int tes
 }
 
 
-void write_hardware_specification(const char *filename) {
-    FILE *file = fopen(filename, "w");
+void writeAllInfoToFile(const char *filename) {
+        const char* dirname = "seq_hw_info/"; 
+    
+    create_directory(dirname); 
+
+    char path[256]; // Assuming max path length of 256 characters
+    snprintf(path, sizeof(path), "%s%s", dirname, filename);
+
+    FILE *file = fopen(path, "w");
     if (file == NULL) {
         printf("Error opening file.\n");
         return;
     }
+
+     fprintf(file, "Compiler information:\n");
+    char* compilerInfo = getCompilerInfo();
+    if (compilerInfo != NULL) {
+        fprintf(file, "%s\n", compilerInfo);
+        free(compilerInfo); // Free the memory allocated for the string
+    }
+
+
+    fprintf(file, "Operating System information:\n");
+    char* osInfo = getOSInfo();
+    if (osInfo != NULL) {
+        fprintf(file, "%s\n", osInfo);
+        free(osInfo); // Free the memory allocated for the string
+    }
+
+    fprintf(file, "\n\n");
 
     // Get system information
     struct sysinfo sys_info;
@@ -171,7 +201,7 @@ void write_hardware_specification(const char *filename) {
     fclose(cpuinfo);
     fclose(file);
 
-    printf("Hardware specification has been written to %s\n", filename);
+    printf("Hardware specification has been written to %s\n", path);
 }
 
 

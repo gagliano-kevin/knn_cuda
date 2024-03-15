@@ -59,9 +59,9 @@ int main() {
 
 
     // Write results and device info to file
-    writeResultsToFile(testLabels, predictions, errorCount, testSize, "seq_results.txt", trainSize, FEATURES, k, metric, exp, knnElaps);
+    writeResultsToFile(testLabels, predictions, errorCount, testSize, "seq_results_iris.txt", "seq_results_iris/", trainSize, FEATURES, k, metric, exp, knnElaps);
     const char *filename = "hardware_spec.txt";
-    write_hardware_specification(filename);
+    writeAllInfoToFile(filename);
 
 
     // Free host memory

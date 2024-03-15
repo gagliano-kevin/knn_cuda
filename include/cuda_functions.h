@@ -189,8 +189,7 @@ extern "C" __global__ void knnSortPredict(double *distances, int trainSize, int 
 
 
 
-void writeResultsToFile(int * trainLabels, int *results, int errorCount, int testSize, const char *filename, int trainSize, int features, int k, int metric, int exp, unsigned int *distDim, unsigned int *predDim, int workers, int alpha, int beta, double kernelTime1, double kernelTime2) {
-    const char* dirname = "results/"; 
+void writeResultsToFile(int * trainLabels, int *results, int errorCount, int testSize, const char *filename, const char *dirname, int trainSize, int features, int k, int metric, int exp, unsigned int *distDim, unsigned int *predDim, int workers, int alpha, int beta, double kernelTime1, double kernelTime2) {
     
     create_directory(dirname); 
 
@@ -361,7 +360,7 @@ int setBestDevice(){
 
 void writeAllInfoToFile(const char *filename, int device){
 
-    const char* dirname = "hw_info/"; 
+    const char* dirname = "par_hw_info/"; 
     
     create_directory(dirname); 
 
