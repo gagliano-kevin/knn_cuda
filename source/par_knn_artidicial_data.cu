@@ -12,7 +12,9 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    int k = 10; 
+    printf("Executing file: %s\n\n", __FILE__);
+    
+    int k = 5; 
     int metric = 3; // Metric distance
     int exp = 4; // Power for Minkowski distance
 
@@ -68,7 +70,7 @@ int main(int argc, char** argv) {
             dimx = atoi(argv[1]);
             dimy = atoi(argv[2]);
         } else {
-            printf("Invalid dimensions. Maximum number of threads per block is %d\n", getMaxThreadsPerBlock(device));
+            printf("Invalid block dimensions for distances computation. Maximum number of threads per block is %d\n", getMaxThreadsPerBlock(device));
             printf("Using default dimensions: %d x %d\n\n", dimx, dimy);
         }
     }
@@ -80,7 +82,6 @@ int main(int argc, char** argv) {
     // Set cache configuration for the kernel -> prefer 48KB L1 cache and 16KB shared memory
     cudaFuncSetCacheConfig(knnDistances, cudaFuncCachePreferL1);
 
-    printf("Executing file: %s\n\n", __FILE__);
 
     double knnDistStart = cpuSecond();
     knnDistances<<< grid, block >>>(d_trainData, d_testData, d_distances, trainSize, testSize, metric, exp, num_features);
@@ -90,19 +91,19 @@ int main(int argc, char** argv) {
 
     int alpha = 2;  // default
     if(argc > 3){
-        if (atoi(argv[3]) >= alpha){
+        if (atoi(argv[3]) >= alpha && atoi(argv[3]) <= 32){         // alpha limited up to 32
             alpha = atoi(argv[3]);
         } else {
-            printf("Invalid alpha value. Using default value: %d\n\n", alpha);
+            printf("Invalid alpha value, alpha must be in range [2, 32]. Using default value: %d\n\n", alpha);
         }
     }
 
     int beta = 4;   // default
     if(argc > 4){
-        if (atoi(argv[4]) >= beta){
+        if (atoi(argv[4]) >= beta && atoi(argv[4]) <= 32){         // beta limited up to 32
             beta = atoi(argv[4]);
         } else {
-            printf("Invalid beta value. Using default value: %d\n\n", beta);
+            printf("Invalid beta value, beta must be in range [4, 32]. Using default value: %d\n\n", beta);
         }
     }
 
@@ -126,6 +127,7 @@ int main(int argc, char** argv) {
     dim3 blockDim(workers, 1, 1);
 
     int sharedWorkers = (int)(blockDim.x / alpha);
+
     int additionalMemory = k * sharedWorkers * (sizeof(double) + sizeof(int));  // blockDim.x/alpha is the number of workers in 2^ iteration (first in shared memory)
 
     int sharedMemorySize = (k * blockDim.x) * (sizeof(double) + sizeof(int)) + additionalMemory; 
@@ -156,7 +158,7 @@ int main(int argc, char** argv) {
     unsigned int predDim[4] = {gridDim.x, gridDim.y, blockDim.x, blockDim.y};
 
     // Write results and device info to file
-    writeResultsToFile(testLabels, predictions, errorCount, testSize, "par_results_artificial.txt", "par_results_artificial/", trainSize, num_features, k, metric, exp, distDim, predDim, workers, alpha, beta, knnDistElaps, knnElaps, sharedMemorySize, maxSharedMemory); 
+    writeResultsToFile(testLabels, predictions, errorCount, testSize, "par_results_artificial.txt", "par_results_artificial/", trainSize, num_features, k, metric, exp, distDim, predDim, workers, alpha, beta, knnDistElaps, knnElaps, sharedMemorySize, maxSharedMemory, sharedWorkers); 
     //writeDeviceInfo("device_info.txt", device);
     writeAllInfoToFile("all_HW_info.txt", device);
 
