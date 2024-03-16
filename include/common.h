@@ -185,7 +185,7 @@ int createDirectory(const char* dirname) {
         //printf("Directory created successfully.\n");
         return 1; // Return 1 to indicate success
     } else {
-        printf("Failed to create directory.\n");
+        printf("Failed to create directory : %s\n\n", dirname);
         return 0; // Return 0 to indicate failure
     }
 }

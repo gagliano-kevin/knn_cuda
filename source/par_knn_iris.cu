@@ -64,11 +64,18 @@ int main(int argc, char** argv) {
     cudaMemcpy(d_trainLabels, trainLabels, trainSize * sizeof(int), cudaMemcpyHostToDevice);
     
 
-    int dimx = 32;      //default
-    int dimy = 32;      //default
+    // Set squared maximum dimensions as default
+    int dimx = (int)sqrt(getMaxThreadsPerBlock(device)); 
+    int dimy = dimx;
+
     if(argc > 2){
-        dimx = atoi(argv[1]);
-        dimy = atoi(argv[2]);
+        if (atoi(argv[1]) * atoi(argv[2]) <= getMaxThreadsPerBlock(device)){
+            dimx = atoi(argv[1]);
+            dimy = atoi(argv[2]);
+        } else {
+            printf("Invalid dimensions. Maximum number of threads per block is %d\n", getMaxThreadsPerBlock(device));
+            printf("Using default dimensions: %d x %d\n\n", dimx, dimy);
+        }
     }
     dim3 block(dimx, dimy);
     dim3 grid((trainSize + block.x-1)/block.x, (testSize + block.y-1)/block.y);
@@ -78,27 +85,50 @@ int main(int argc, char** argv) {
     // Set cache configuration for the kernel -> prefer 48KB L1 cache and 16KB shared memory
     cudaFuncSetCacheConfig(knnDistances, cudaFuncCachePreferL1);
 
+    printf("Executing file: %s\n\n", __FILE__);
+
     double knnDistStart = cpuSecond();
     knnDistances<<< grid, block >>>(d_trainData, d_testData, d_distances, trainSize, testSize, metric, exp, FEATURES);
     cudaDeviceSynchronize();        //forcing synchronous behavior
     double knnDistElaps = cpuSecond() - knnDistStart;
     
-    int workers = 10;       // default
+    int alpha = 2;  // default
     if(argc > 3){
-        workers = atoi(argv[3]);
+        if (atoi(argv[3]) >= alpha){
+            alpha = atoi(argv[3]);
+        } else {
+            printf("Invalid alpha value. Using default value: %d\n\n", alpha);
+        }
+    }
+
+    int beta = 4;   // default
+    if(argc > 4){
+        if (atoi(argv[4]) >= beta){
+            beta = atoi(argv[4]);
+        } else {
+            printf("Invalid beta value. Using default value: %d\n\n", beta);
+        }
+    }
+
+    int maxSharedMemory = getSharedMemoryPerBlock(device);
+    int itemSize = sizeof(double) + sizeof(int);
+    int workers = maxSharedMemory/(k * itemSize * (1.5 + 1/alpha));       // default (maxization of shared memory usage)
+    workers = nearestPowerOfTwo(workers);
+    if (workers > (int)trainSize/(alpha*k)){
+        workers = nearestPowerOfTwo((int)trainSize/(alpha*k));           // new default in case of too many workers (small dataset)
+    }
+
+    if(argc > 5){
+        if (atoi(argv[5]) < workers){
+            workers = atoi(argv[5]);
+        } else {
+            printf("Invalid workers value. Using default value: %d\n\n", workers);
+        }
     }
 
     dim3 gridDim(testSize, 1, 1);   // each thread block is responsible for a row of the distances matrix
     dim3 blockDim(workers, 1, 1);
-    int alpha = 2;  // default
-    if(argc > 4){
-        alpha = atoi(argv[4]);
-    }
 
-    int beta = 4;
-    if(argc > 5){
-        beta = atoi(argv[5]);
-    }
     int sharedWorkers = (int)(blockDim.x / alpha);
     int additionalMemory = k * sharedWorkers * (sizeof(double) + sizeof(int));  // blockDim.x/alpha is the number of workers in 2^ iteration (first in shared memory)
 
@@ -130,7 +160,7 @@ int main(int argc, char** argv) {
     unsigned int predDim[4] = {gridDim.x, gridDim.y, blockDim.x, blockDim.y};
 
     // Write results and device info to file
-    writeResultsToFile(testLabels, predictions, errorCount, testSize, "par_results_iris.txt", "par_results_iris/", trainSize, FEATURES, k, metric, exp, distDim, predDim, workers, alpha, beta, knnDistElaps, knnElaps); 
+    writeResultsToFile(testLabels, predictions, errorCount, testSize, "par_results_iris.txt", "par_results_iris/", trainSize, FEATURES, k, metric, exp, distDim, predDim, workers, alpha, beta, knnDistElaps, knnElaps, sharedMemorySize, maxSharedMemory); 
     //writeDeviceInfo("device_info.txt", device);
     writeAllInfoToFile("all_HW_info.txt", device);
 

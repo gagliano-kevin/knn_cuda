@@ -189,7 +189,7 @@ extern "C" __global__ void knn(double *distances, int trainSize, int *indexes, i
 
 
 
-void writeResultsToFile(int * trainLabels, int *results, int errorCount, int testSize, const char *filename, const char *dirname, int trainSize, int features, int k, int metric, int exp, unsigned int *distDim, unsigned int *predDim, int workers, int alpha, int beta, double kernelTime1, double kernelTime2) {
+void writeResultsToFile(int * trainLabels, int *results, int errorCount, int testSize, const char *filename, const char *dirname, int trainSize, int features, int k, int metric, int exp, unsigned int *distDim, unsigned int *predDim, int workers, int alpha, int beta, double kernelTime1, double kernelTime2, int sharedMemory, int maxSharedMemory) {
     
     createDirectory(dirname); 
 
@@ -205,13 +205,14 @@ void writeResultsToFile(int * trainLabels, int *results, int errorCount, int tes
     fprintf(file, "Kernel launch information:\n");
     fprintf(file, "Grid dimension in knnDistances kernel: %u , %u\n", distDim[0], distDim[1]);
     fprintf(file, "Block dimension in knnDistances kernel: %u , %u\n", distDim[2], distDim[3]);
-    fprintf(file, "Grid dimension in knnSortPredict kernel: %u , %u\n",predDim[0], predDim[1]);
-    fprintf(file, "Block dimension in knnSortPredict kernel: %u , %u\n", predDim[2], predDim[3]);
+    fprintf(file, "Grid dimension in knn kernel: %u , %u\n",predDim[0], predDim[1]);
+    fprintf(file, "Block dimension in knn kernel: %u , %u\n", predDim[2], predDim[3]);
     fprintf(file, "Number of workers: %d\n", workers);
     fprintf(file, "Factor alpha: %d\n", alpha);
     fprintf(file, "Factor beta: %d\n", beta);
+    fprintf(file, "Shared memory used: %d bytes \t<---->\t Max shared memory per block: %d bytes\n", sharedMemory, maxSharedMemory);
     fprintf(file, "knnDistances execution time %f sec\n", kernelTime1);
-    fprintf(file, "knnSortPredict execution time %f sec\n", kernelTime2);
+    fprintf(file, "knn execution time %f sec\n", kernelTime2);
 
     fprintf(file, "\nData information:\n");
     fprintf(file, "Training data size: %d\n", trainSize);
@@ -345,7 +346,7 @@ int setBestDevice(){
         CHECK(cudaSetDevice(maxDevice));
         cudaDeviceProp best_prop;
         CHECK(cudaGetDeviceProperties(&best_prop, maxDevice));
-        printf("Setting Device %d : \"%s\"\n", maxDevice, best_prop.name);
+        printf("Setting Device %d : \"%s\"\n\n", maxDevice, best_prop.name);
         return maxDevice;
     } else {
         printf("Detected only one CUDA Device ...\n");
@@ -353,11 +354,24 @@ int setBestDevice(){
         CHECK(cudaSetDevice(dev));
         cudaDeviceProp deviceProp;
         CHECK(cudaGetDeviceProperties(&deviceProp, dev));
-        printf("Setting Device %d: \"%s\"\n", dev, deviceProp.name);
+        printf("Setting Device %d: \"%s\"\n\n", dev, deviceProp.name);
         return dev;
     }
 }
 
+
+int getMaxThreadsPerBlock(int device){
+    cudaDeviceProp deviceProp;
+    CHECK(cudaGetDeviceProperties(&deviceProp, device));
+    return deviceProp.maxThreadsPerBlock;
+}
+
+
+int getSharedMemoryPerBlock(int device){
+    cudaDeviceProp deviceProp;
+    CHECK(cudaGetDeviceProperties(&deviceProp, device));
+    return deviceProp.sharedMemPerBlock;
+}
 
 
 void writeAllInfoToFile(const char *filename, int device){
@@ -503,6 +517,13 @@ void writeAllInfoToFile(const char *filename, int device){
 }
 
 
+int nearestPowerOfTwo(int n) {
+    int power = 1;
+    while (power <= n) {
+        power *= 2;
+    }
+    return power / 2;
+}
 
 
 #endif
