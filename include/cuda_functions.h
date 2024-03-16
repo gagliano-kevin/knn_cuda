@@ -189,7 +189,7 @@ extern "C" __global__ void knn(double *distances, int trainSize, int *indexes, i
 
 
 
-void writeResultsToFile(int * trainLabels, int *results, int errorCount, int testSize, const char *filename, const char *dirname, int trainSize, int features, int k, int metric, int exp, unsigned int *distDim, unsigned int *predDim, int workers, int alpha, int beta, double kernelTime1, double kernelTime2, int sharedMemory, int maxSharedMemory) {
+void writeResultsToFile(int * trainLabels, int *results, int errorCount, int testSize, const char *filename, const char *dirname, int trainSize, int features, int k, int metric, int exp, unsigned int *distDim, unsigned int *predDim, int workers, int alpha, int beta, double kernelTime1, double kernelTime2, int sharedMemory, int maxSharedMemory, int sharedWorkers) {
     
     createDirectory(dirname); 
 
@@ -208,6 +208,7 @@ void writeResultsToFile(int * trainLabels, int *results, int errorCount, int tes
     fprintf(file, "Grid dimension in knn kernel: %u , %u\n",predDim[0], predDim[1]);
     fprintf(file, "Block dimension in knn kernel: %u , %u\n", predDim[2], predDim[3]);
     fprintf(file, "Number of workers: %d\n", workers);
+    fprintf(file, "Shared workers (threads that initially operate in shared memory partitions): %d\n", sharedWorkers);
     fprintf(file, "Factor alpha: %d\n", alpha);
     fprintf(file, "Factor beta: %d\n", beta);
     fprintf(file, "Shared memory used: %d bytes \t<---->\t Max shared memory per block: %d bytes\n", sharedMemory, maxSharedMemory);
@@ -518,6 +519,9 @@ void writeAllInfoToFile(const char *filename, int device){
 
 
 int nearestPowerOfTwo(int n) {
+    if(n == 0){         // condition to handle 0 as input (useful for workers default calculation with too big alpha factor and small dataset)  
+        return 1;
+    }
     int power = 1;
     while (power <= n) {
         power *= 2;
