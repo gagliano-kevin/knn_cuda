@@ -154,7 +154,7 @@ int main(int argc, char** argv) {
     }
 
     if(argc > 5){
-        if (atoi(argv[5]) < workers && atoi(argv[5]) >= 1{
+        if (atoi(argv[5]) < workers && atoi(argv[5]) >= 1){
             workers = atoi(argv[5]);
         } else {
             printf("Invalid workers value. Using default value: %d\n\n", workers);
