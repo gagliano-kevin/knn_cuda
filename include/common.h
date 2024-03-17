@@ -205,4 +205,26 @@ int createDirectory(const char* dirname) {
 }
 
 
+void exeTimeToFile(const char *filename, const char *dirname, double* exeTimes, int num_executions){
+    createDirectory(dirname); 
+
+    char path[256]; // Assuming max path length of 256 characters
+    snprintf(path, sizeof(path), "%s%s", dirname, filename);
+    
+    FILE *file = fopen(path, "a");
+    if (file == NULL) {
+        printf("Error opening file!\n");
+        return;
+    }
+
+    for(int i = 0; i < num_executions; i++){
+        fprintf(file, "%f ; ", exeTimes[i]);
+    }
+    fprintf(file, "\n");
+
+    fclose(file);
+}
+
+
+
 #endif

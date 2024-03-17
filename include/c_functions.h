@@ -86,6 +86,46 @@ void knn(double *trainData, double *testData, double *distances, int trainSize, 
 }
 
 
+void appendResultsToFile(int errorCount, int testSize, const char *filename, const char *dirname, int trainSize, int features, int k, int metric, int exp, double time1){
+    createDirectory(dirname); 
+
+    char path[256]; // Assuming max path length of 256 characters
+    snprintf(path, sizeof(path), "%s%s", dirname, filename);
+    
+    FILE *file = fopen(path, "a");
+    if (file == NULL) {
+        printf("Error opening file!\n");
+        return;
+    }
+
+    fprintf(file, "knn execution information:\n");
+    fprintf(file, "knn execution time %f sec\n", time1);
+
+    fprintf(file, "\nData information:\n");
+    fprintf(file, "Training data size: %d\n", trainSize);
+    fprintf(file, "Test data size: %d\n", testSize);
+    fprintf(file, "Number of features: %d\n", features);
+
+    fprintf(file, "\nKNN Parameters:\n");
+    fprintf(file, "k: %d\n", k);
+    fprintf(file, "Distance Metric: ");
+    if (metric == 1) {
+        fprintf(file, "Euclidean\n");
+    } else if (metric == 2) {
+        fprintf(file, "Manhattan\n");
+    } else if (metric == 3) {
+        fprintf(file, "Minkowski (p=%d)\n", exp);
+    }
+
+    fprintf(file, "\nNumber of prediction errors: %d\n", errorCount);
+    fprintf(file, "\n-------------------------------------------------------------------------------------------------------------------------------------------\n\n");
+
+
+    fclose(file);
+}
+
+
+
 void writeResultsToFile(int * trainLabels, int *results, int errorCount, int testSize, const char *filename, const char *dirname, int trainSize, int features, int k, int metric, int exp, double time1) {
     
     createDirectory(dirname); 
