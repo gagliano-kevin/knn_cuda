@@ -187,6 +187,53 @@ extern "C" __global__ void knn(double *distances, int trainSize, int *indexes, i
     }
 }
 
+void appendResultsToFile(int errorCount, int testSize, const char *filename, const char *dirname, int trainSize, int features, int k, int metric, int exp, unsigned int *distDim, unsigned int *predDim, int workers, int alpha, int beta, double kernelTime1, double kernelTime2, int sharedMemory, int maxSharedMemory, int sharedWorkers){
+    createDirectory(dirname); 
+
+    char path[256]; // Assuming max path length of 256 characters
+    snprintf(path, sizeof(path), "%s%s", dirname, filename);
+    
+    FILE *file = fopen(path, "a");
+    if (file == NULL) {
+        printf("Error opening file!\n");
+        return;
+    }
+
+    fprintf(file, "Kernel launch information:\n");
+    fprintf(file, "Grid dimension in knnDistances kernel: %u , %u\n", distDim[0], distDim[1]);
+    fprintf(file, "Block dimension in knnDistances kernel: %u , %u\n", distDim[2], distDim[3]);
+    fprintf(file, "Grid dimension in knn kernel: %u , %u\n",predDim[0], predDim[1]);
+    fprintf(file, "Block dimension in knn kernel: %u , %u\n", predDim[2], predDim[3]);
+    fprintf(file, "Number of workers: %d\n", workers);
+    fprintf(file, "Shared workers (threads that initially operate in shared memory partitions): %d\n", sharedWorkers);
+    fprintf(file, "Factor alpha: %d\n", alpha);
+    fprintf(file, "Factor beta: %d\n", beta);
+    fprintf(file, "Shared memory used: %d bytes \t<---->\t Max shared memory per block: %d bytes\n", sharedMemory, maxSharedMemory);
+    fprintf(file, "knnDistances execution time %f sec\n", kernelTime1);
+    fprintf(file, "knn execution time %f sec\n", kernelTime2);
+
+    fprintf(file, "\nData information:\n");
+    fprintf(file, "Training data size: %d\n", trainSize);
+    fprintf(file, "Test data size: %d\n", testSize);
+    fprintf(file, "Number of features: %d\n", features);
+
+    fprintf(file, "\nKNN Parameters:\n");
+    fprintf(file, "k: %d\n", k);
+    fprintf(file, "Distance Metric: ");
+    if (metric == 1) {
+        fprintf(file, "Euclidean\n");
+    } else if (metric == 2) {
+        fprintf(file, "Manhattan\n");
+    } else if (metric == 3) {
+        fprintf(file, "Minkowski (p=%d)\n", exp);
+    }
+
+    fprintf(file, "\nNumber of prediction errors: %d\n", errorCount);
+    fprintf(file, "\n-------------------------------------------------------------------------------------------------------------------------------------------\n\n");
+
+
+    fclose(file);
+}
 
 
 void writeResultsToFile(int * trainLabels, int *results, int errorCount, int testSize, const char *filename, const char *dirname, int trainSize, int features, int k, int metric, int exp, unsigned int *distDim, unsigned int *predDim, int workers, int alpha, int beta, double kernelTime1, double kernelTime2, int sharedMemory, int maxSharedMemory, int sharedWorkers) {

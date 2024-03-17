@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 
 #define BUFFER_SIZE 256
@@ -178,6 +180,14 @@ char* getOSInfo() {
     return osInfo;
 }
 
+int directoryExists(const char *path) {
+    struct stat info;
+    if(stat(path, &info) != 0) {
+        // Error accessing the directory
+        return 0;
+    }
+    return S_ISDIR(info.st_mode);
+}
 
 int createDirectory(const char* dirname) {
     // Attempt to create the directory
@@ -185,6 +195,10 @@ int createDirectory(const char* dirname) {
         //printf("Directory created successfully.\n");
         return 1; // Return 1 to indicate success
     } else {
+        if(directoryExists(dirname)) {
+            //printf("Directory already exists.\n");
+            return 1; // Return 1 to indicate success
+        }
         printf("Failed to create directory : %s\n\n", dirname);
         return 0; // Return 0 to indicate failure
     }
