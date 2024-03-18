@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# --------------------- TEST ON ARTIFICIAL FEATURES --------------------- #
+
 # Compile CUDA source file
 nvcc source/tests/artificial_features.cu -o par_artificial_features
 
@@ -17,3 +19,5 @@ nvprof ./par_artificial_features > >(tee nvprof_outputs/par_artificial_features_
 
 # Clean up 
 rm par_artificial_features seq_artificial_features
+
+# --------------------- TEST ON TRAIN SIZES --------------------- #
