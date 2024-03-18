@@ -23,7 +23,7 @@ int main() {
         int errorCount = 0;
 
         double avgKnnElaps = 0.0;
-        for(int i = 1; i <= 1; i++){
+        for(int i = 1; i <= 10; i++){
 
             // pointer to memory for data and labels
             double *trainData;
@@ -68,7 +68,7 @@ int main() {
             free(trainIndexes);
             free(predictions);
         }
-        avgKnnElaps /= 1;
+        avgKnnElaps /= 10;
         //printf("Average elapsed time for knn computation: %f\n", avgKnnElaps);
 
         exeTimes[(trainSize/1000)-1] = avgKnnElaps;

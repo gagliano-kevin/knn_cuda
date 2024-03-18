@@ -6,7 +6,7 @@ int main() {
 
     printf("Executing file: %s\n\n", __FILE__);
 
-    int k = 10; 
+    int k = 5; 
     int metric = 1; // Euclidean distance
     int exp = 4; // Power for Minkowski distance (not used in this case)
     int trainSize = 1000; // Size of the dataset
@@ -17,7 +17,7 @@ int main() {
 
     double exeTimes[10];
 
-    for(testSize = 100; testSize <= 1000; testSize += 100){
+    for(k = 5; k <= 50; k += 5){
 
 
         int errorCount = 0;
@@ -71,15 +71,15 @@ int main() {
         avgKnnElaps /= 10;
         //printf("Average elapsed time for knn computation: %f\n", avgKnnElaps);
 
-        exeTimes[(testSize/100)-1] = avgKnnElaps;
+        exeTimes[(k/5)-1] = avgKnnElaps;
 
 
         // Print results to file
-        appendResultsToFile(errorCount, testSize, "artificial_testSizes_c.txt", "artificial_testSizes/", trainSize, num_features, k, metric, exp, avgKnnElaps);
+        appendResultsToFile(errorCount, testSize, "artificial_k_c.txt", "artificial_k/", trainSize, num_features, k, metric, exp, avgKnnElaps);
 
     }
 
-    exeTimeToFile("artificial_testSizes_csv.txt", "artificial_testSizes/", exeTimes, 10);
+    exeTimeToFile("artificial_k_csv.txt", "artificial_k/", exeTimes, 10);
 
 
 
