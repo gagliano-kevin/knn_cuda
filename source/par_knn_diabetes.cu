@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
     printf("Executing file: %s\n\n", __FILE__);
     
     int k = 10; 
-    int metric = 3; // Metric distance
+    int metric = 1; // Metric distance
     int exp = 4; // Power for Minkowski distance
 
     Row *dataset;
@@ -122,10 +122,14 @@ int main(int argc, char** argv) {
     // Set cache configuration for the kernel -> prefer 48KB L1 cache and 16KB shared memory
     cudaFuncSetCacheConfig(knnDistances, cudaFuncCachePreferL1);
 
-    double knnDistStart = cpuSecond();
-    knnDistances<<< grid, block >>>(d_trainData, d_testData, d_distances, trainSize, testSize, metric, exp, FEATURES);
-    cudaDeviceSynchronize();        //forcing synchronous behavior
-    double knnDistElaps = cpuSecond() - knnDistStart;
+    double avgKnnDistElaps = 0.0;
+    for(int i = 1; i <= 5; i++){
+        double knnDistStart = cpuSecond();
+        knnDistances<<< grid, block >>>(d_trainData, d_testData, d_distances, trainSize, testSize, metric, exp, FEATURES);
+        cudaDeviceSynchronize();        //forcing synchronous behavior
+        avgKnnDistElaps += (cpuSecond() - knnDistStart);
+    }
+    avgKnnDistElaps /= 5;
     
     int alpha = 2;  // default
     if(argc > 3){
@@ -172,10 +176,16 @@ int main(int argc, char** argv) {
 
     int index = k * (blockDim.x + sharedWorkers); // starting index for trainIndexes in shared memory 
 
-    double knnStart = cpuSecond();
-    knn<<< gridDim, blockDim, sharedMemorySize>>>(d_distances, trainSize, d_trainIndexes, k, d_predictions, d_trainLabels, index, alpha, beta, CLASSES);
-    cudaDeviceSynchronize();        //forcing synchronous behavior
-    double knnElaps = cpuSecond() - knnStart;
+    double avgKnnElaps = 0.0;
+    for(int i = 1; i <= 5; i++){
+        double knnStart = cpuSecond();
+        knn<<< gridDim, blockDim, sharedMemorySize>>>(d_distances, trainSize, d_trainIndexes, k, d_predictions, d_trainLabels, index, alpha, beta, CLASSES);
+        cudaDeviceSynchronize();        //forcing synchronous behavior
+        avgKnnElaps += (cpuSecond() - knnStart);
+    }
+    avgKnnElaps /= 5;
+    
+    double exeTime = avgKnnDistElaps + avgKnnElaps;
 
     cudaMemcpy(distances, d_distances, trainSize * testSize * sizeof(double), cudaMemcpyDeviceToHost);
     cudaMemcpy(trainIndexes, d_trainIndexes, trainSize * testSize * sizeof(int), cudaMemcpyDeviceToHost);
@@ -195,10 +205,12 @@ int main(int argc, char** argv) {
     unsigned int distDim[4] = {grid.x, grid.y, block.x, block.y};
     unsigned int predDim[4] = {gridDim.x, gridDim.y, blockDim.x, blockDim.y};
 
+    appendResultsToFile(errorCount, testSize, "diabetes_cu.txt", "diabetes/", trainSize, FEATURES, k, metric, exp, distDim, predDim, workers, alpha, beta, avgKnnDistElaps, avgKnnElaps, sharedMemorySize, maxSharedMemory, sharedWorkers);
+
     // Write results and device info to file
-    writeResultsToFile(testLabels, predictions, errorCount, testSize, "par_results_diabetes.txt", "par_results_diabetes/", trainSize, FEATURES, k, metric, exp, distDim, predDim, workers, alpha, beta, knnDistElaps, knnElaps, sharedMemorySize, maxSharedMemory, sharedWorkers); 
+    //writeResultsToFile(testLabels, predictions, errorCount, testSize, "par_results_diabetes.txt", "par_results_diabetes/", trainSize, FEATURES, k, metric, exp, distDim, predDim, workers, alpha, beta, knnDistElaps, knnElaps, sharedMemorySize, maxSharedMemory, sharedWorkers); 
     //writeDeviceInfo("device_info.txt", device);
-    writeAllInfoToFile("all_HW_info.txt", device);
+    //writeAllInfoToFile("all_HW_info.txt", device);
 
     // Free device memory
     cudaFree(d_trainData);
@@ -223,6 +235,7 @@ int main(int argc, char** argv) {
     //reset device
     cudaDeviceReset();
 
+    exeTimeToFile("diabetes_csv.txt", "diabetes/", &exeTime, 1);
 
     return 0;
 }

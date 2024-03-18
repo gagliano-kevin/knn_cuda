@@ -178,3 +178,36 @@ echo -e "Test on iris dataset done\n\n\n"
 mv iris ../iris
 
 cd ..
+
+# ----------------------------- TEST ON DIABETES DATASET ----------------------------- #
+
+cd source
+
+echo -e "Compiling par_knn_diabetes.cu\n"
+
+# Compile CUDA source file
+nvcc par_knn_diabetes.cu -o par_knn_diabetes
+
+echo -e "Compiling seq_knn_diabetes.c\n"
+
+# Compile C source file
+gcc seq_knn_diabetes.c -o seq_knn_diabetes -lm
+
+echo -e "Running par_knn_diabetes.cu, nvprof output redirected to nvprof_outputs/par_knn_diabetes_nvprof_output.txt\n"
+
+# Run the compiled CUDA code with nvprof and redirect output to txt file
+nvprof ./par_knn_diabetes > ../nvprof_outputs/par_knn_diabetes_nvprof_output.txt 2>&1
+
+echo -e "Running seq_knn_diabetes.c\n"
+
+# Run the compiled C code
+./seq_knn_diabetes
+
+# Clean up 
+rm par_knn_diabetes seq_knn_diabetes
+
+echo -e "Test on diabetes dataset done\n\n\n"
+
+mv diabetes ../diabetes
+
+cd ..
