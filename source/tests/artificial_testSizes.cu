@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
         cudaFuncSetCacheConfig(knnDistances, cudaFuncCachePreferL1);
 
         double avgKnnDistElaps = 0.0;
-        for(int i = 1; i <= 10; i++){
+        for(int i = 1; i <= 5; i++){
             double knnDistStart = cpuSecond();
             knnDistances<<< grid, block >>>(d_trainData, d_testData, d_distances, trainSize, testSize, metric, exp, num_features);
             cudaDeviceSynchronize();        //forcing synchronous behavior
@@ -93,7 +93,7 @@ int main(int argc, char** argv) {
             //printf("Iterations [%d] --> Elapsed time for distances computation: %f\n", i, knnDistElaps);
             avgKnnDistElaps += knnDistElaps;
         }
-        avgKnnDistElaps /= 10;
+        avgKnnDistElaps /= 5;
         //printf("Average elapsed time for distances computation: %f\n", avgKnnDistElaps);
 
         int alpha = 2;  // default
@@ -142,7 +142,7 @@ int main(int argc, char** argv) {
         int index = k * (blockDim.x + sharedWorkers); // starting index for trainIndexes in shared memory 
 
         double avgKnnElaps = 0.0;
-        for(int i = 1; i <= 10; i++){
+        for(int i = 1; i <= 5; i++){
             double knnStart = cpuSecond();
             knn<<< gridDim, blockDim, sharedMemorySize>>>(d_distances, trainSize, d_trainIndexes, k, d_predictions, d_trainLabels, index, alpha, beta, num_classes);
             cudaDeviceSynchronize();        //forcing synchronous behavior
@@ -150,7 +150,7 @@ int main(int argc, char** argv) {
             //printf("Iterations [%d] --> Elapsed time for knn computation: %f\n", i, knnElaps);
             avgKnnElaps += knnElaps;
         }
-        avgKnnElaps /= 10;
+        avgKnnElaps /= 5;
         //printf("Average elapsed time for knn computation: %f\n", avgKnnElaps);
 
         cudaMemcpy(distances, d_distances, trainSize * testSize * sizeof(double), cudaMemcpyDeviceToHost);

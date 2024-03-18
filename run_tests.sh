@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 # Create directory to store nvprof outputs
 mkdir nvprof_outputs
 
@@ -146,3 +145,36 @@ nvprof ./par_artificial_blockDims > nvprof_outputs/par_artificial_blockDims_nvpr
 rm par_artificial_blockDims
 
 echo -e "Test on artificial data with growing block dimensions done\n\n\n"
+
+# ----------------------------- TEST ON IRIS DATASET ----------------------------- #
+
+cd source
+
+echo -e "Compiling par_knn_iris.cu\n"
+
+# Compile CUDA source file
+nvcc par_knn_iris.cu -o par_knn_iris
+
+echo -e "Compiling seq_knn_iris.c\n"
+
+# Compile C source file
+gcc seq_knn_iris.c -o seq_knn_iris -lm
+
+echo -e "Running par_knn_iris.cu, nvprof output redirected to nvprof_outputs/par_knn_iris_nvprof_output.txt\n"
+
+# Run the compiled CUDA code with nvprof and redirect output to txt file
+nvprof ./par_knn_iris > ../nvprof_outputs/par_knn_iris_nvprof_output.txt 2>&1
+
+echo -e "Running seq_knn_iris.c\n"
+
+# Run the compiled C code
+./seq_knn_iris
+
+# Clean up 
+rm par_knn_iris seq_knn_iris
+
+echo -e "Test on iris dataset done\n\n\n"
+
+mv iris ../iris
+
+cd ..
