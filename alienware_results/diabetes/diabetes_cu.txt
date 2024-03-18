@@ -1,0 +1,26 @@
+Kernel launch information:
+Grid dimension in knnDistances kernel: 77 , 10
+Block dimension in knnDistances kernel: 32 , 32
+Grid dimension in knn kernel: 308 , 1
+Block dimension in knn kernel: 64 , 1
+Number of workers: 64
+Shared workers (threads that initially operate in shared memory partitions): 32
+Factor alpha: 2
+Factor beta: 4
+Shared memory used: 11520 bytes 	<---->	 Max shared memory per block: 49152 bytes
+knnDistances execution time 0.000652 sec
+knn execution time 0.006581 sec
+
+Data information:
+Training data size: 2460
+Test data size: 308
+Number of features: 8
+
+KNN Parameters:
+k: 10
+Distance Metric: Euclidean
+
+Number of prediction errors: 95
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+

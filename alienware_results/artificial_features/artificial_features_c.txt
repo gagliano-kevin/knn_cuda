@@ -1,0 +1,160 @@
+knn execution information:
+knn execution time 0.223509 sec
+
+Data information:
+Training data size: 1000
+Test data size: 100
+Number of features: 10
+
+KNN Parameters:
+k: 10
+Distance Metric: Euclidean
+
+Number of prediction errors: 0
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+knn execution information:
+knn execution time 0.225653 sec
+
+Data information:
+Training data size: 1000
+Test data size: 100
+Number of features: 20
+
+KNN Parameters:
+k: 10
+Distance Metric: Euclidean
+
+Number of prediction errors: 0
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+knn execution information:
+knn execution time 0.226565 sec
+
+Data information:
+Training data size: 1000
+Test data size: 100
+Number of features: 30
+
+KNN Parameters:
+k: 10
+Distance Metric: Euclidean
+
+Number of prediction errors: 0
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+knn execution information:
+knn execution time 0.233889 sec
+
+Data information:
+Training data size: 1000
+Test data size: 100
+Number of features: 40
+
+KNN Parameters:
+k: 10
+Distance Metric: Euclidean
+
+Number of prediction errors: 0
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+knn execution information:
+knn execution time 0.233890 sec
+
+Data information:
+Training data size: 1000
+Test data size: 100
+Number of features: 50
+
+KNN Parameters:
+k: 10
+Distance Metric: Euclidean
+
+Number of prediction errors: 0
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+knn execution information:
+knn execution time 0.236100 sec
+
+Data information:
+Training data size: 1000
+Test data size: 100
+Number of features: 60
+
+KNN Parameters:
+k: 10
+Distance Metric: Euclidean
+
+Number of prediction errors: 0
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+knn execution information:
+knn execution time 0.238671 sec
+
+Data information:
+Training data size: 1000
+Test data size: 100
+Number of features: 70
+
+KNN Parameters:
+k: 10
+Distance Metric: Euclidean
+
+Number of prediction errors: 0
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+knn execution information:
+knn execution time 0.243582 sec
+
+Data information:
+Training data size: 1000
+Test data size: 100
+Number of features: 80
+
+KNN Parameters:
+k: 10
+Distance Metric: Euclidean
+
+Number of prediction errors: 0
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+knn execution information:
+knn execution time 0.244908 sec
+
+Data information:
+Training data size: 1000
+Test data size: 100
+Number of features: 90
+
+KNN Parameters:
+k: 10
+Distance Metric: Euclidean
+
+Number of prediction errors: 0
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+knn execution information:
+knn execution time 0.244947 sec
+
+Data information:
+Training data size: 1000
+Test data size: 100
+Number of features: 100
+
+KNN Parameters:
+k: 10
+Distance Metric: Euclidean
+
+Number of prediction errors: 0
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+

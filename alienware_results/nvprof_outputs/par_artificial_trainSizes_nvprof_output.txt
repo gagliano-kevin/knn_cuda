@@ -1,0 +1,33 @@
+==15800== NVPROF is profiling process 15800, command: ./par_artificial_trainSizes
+Detected only one CUDA Device ...
+Setting Device 0: "NVIDIA GeForce GTX 980M"
+
+Executing file: source/tests/artificial_trainSizes.cu
+
+==15800== Profiling application: ./par_artificial_trainSizes
+==15800== Profiling result:
+            Type  Time(%)      Time     Calls       Avg       Min       Max  Name
+ GPU activities:   88.01%  351.49ms        50  7.0298ms  667.61us  22.078ms   knn
+                    7.47%  29.835ms        50  596.69us  116.80us  1.0718ms  knnDistances(double*, double*, double*, int, int, int, int, int)
+                    3.35%  13.388ms        30  446.26us  1.2470us  3.7541ms  [CUDA memcpy DtoH]
+                    1.08%  4.3230ms        40  108.08us     832ns  685.21us  [CUDA memcpy HtoD]
+                    0.08%  322.14us        10  32.214us  6.3040us  56.831us  [CUDA memset]
+      API calls:   36.05%  381.66ms       100  3.8166ms  119.46us  22.080ms  cudaDeviceSynchronize
+                   30.44%  322.23ms        60  5.3705ms  2.3840us  38.859ms  cudaMalloc
+                   22.45%  237.71ms        10  23.771ms  22.100ms  27.985ms  cudaDeviceReset
+                    4.43%  46.931ms         1  46.931ms  46.931ms  46.931ms  cudaSetDevice
+                    3.41%  36.123ms        10  3.6123ms  3.4884ms  3.7991ms  cudaFuncSetCacheConfig
+                    2.21%  23.390ms        70  334.15us  8.0610us  4.4736ms  cudaMemcpy
+                    0.62%  6.5368ms        60  108.95us  2.7850us  584.12us  cudaFree
+                    0.22%  2.2808ms        21  108.61us  96.265us  167.46us  cudaGetDeviceProperties
+                    0.14%  1.5274ms       100  15.274us  2.5600us  112.00us  cudaLaunchKernel
+                    0.02%  175.98us        10  17.598us  15.114us  30.123us  cudaMemset
+                    0.01%  146.90us       114  1.2880us      89ns  70.747us  cuDeviceGetAttribute
+                    0.00%  22.738us         1  22.738us  22.738us  22.738us  cuDeviceGetName
+                    0.00%  6.6220us         1  6.6220us  6.6220us  6.6220us  cuDeviceGetPCIBusId
+                    0.00%  5.3660us         1  5.3660us  5.3660us  5.3660us  cuDeviceTotalMem
+                    0.00%     839ns         3     279ns      88ns     553ns  cuDeviceGetCount
+                    0.00%     478ns         2     239ns      99ns     379ns  cuDeviceGet
+                    0.00%     362ns         1     362ns     362ns     362ns  cudaGetDeviceCount
+                    0.00%     224ns         1     224ns     224ns     224ns  cuDeviceGetUuid
+                    0.00%     199ns         1     199ns     199ns     199ns  cuModuleGetLoadingMode
