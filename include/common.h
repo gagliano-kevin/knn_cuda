@@ -30,7 +30,7 @@ int checkResult(int *labels, int *predictions, const int N){
             errorCount++;
         }
     }
-    printf("Number of prediction errors: %d\n\n", errorCount);
+    //printf("Number of prediction errors: %d\n\n", errorCount);
     return errorCount;
 }
 

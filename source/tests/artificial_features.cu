@@ -14,8 +14,8 @@ int main(int argc, char** argv) {
     int k = 10; 
     int metric = 1; // Euclidean distance
     int exp = 4; // Power for Minkowski distance (not used in this case)
-    int trainSize = 2000; // Size of the dataset
-    int testSize = 200; // Size of the dataset
+    int trainSize = 1000; // Size of the dataset
+    int testSize = 100; // Size of the dataset
     int mean = 10; // Mean value for class component
 
     
