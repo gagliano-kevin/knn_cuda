@@ -9,8 +9,6 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    writeAllInfoToFile("SW_HW_info.txt", device);
-
     printf("Executing file: %s\n\n", __FILE__);
 
     int k = 10; 
@@ -19,15 +17,14 @@ int main(int argc, char** argv) {
     int trainSize = 1000; // Size of the dataset
     int testSize = 100; // Size of the dataset
     int mean = 10; // Mean value for class component
-
-    
     int num_features = 10; // Number of features (and classes)
+    int num_classes = num_features; // Number of classes
 
     double exeTimes[10];
 
-    for(num_features = 10; num_features <= 100; num_features += 10){
+    for(testSize = 100; testSize <= 1000; testSize += 100){
     
-        int num_classes = num_features; // Number of classes
+
 
         // pointer to memory for data and labels
         double *trainData;
@@ -168,9 +165,9 @@ int main(int argc, char** argv) {
         unsigned int predDim[4] = {gridDim.x, gridDim.y, blockDim.x, blockDim.y};
 
         // Print results to file
-        appendResultsToFile(errorCount, testSize, "artificial_features_cu.txt", "artificial_features/", trainSize, num_features, k, metric, exp, distDim, predDim, workers, alpha, beta, avgKnnDistElaps, avgKnnElaps, sharedMemorySize, maxSharedMemory, sharedWorkers);
+        appendResultsToFile(errorCount, testSize, "artificial_testSizes_cu.txt", "artificial_testSizes/", trainSize, num_features, k, metric, exp, distDim, predDim, workers, alpha, beta, avgKnnDistElaps, avgKnnElaps, sharedMemorySize, maxSharedMemory, sharedWorkers);
 
-        exeTimes[(num_features/10)-1] = avgKnnElaps + avgKnnDistElaps;
+        exeTimes[(testSize/100)-1] = avgKnnElaps + avgKnnDistElaps;
 
         // Free device memory
         cudaFree(d_trainData);
@@ -195,7 +192,7 @@ int main(int argc, char** argv) {
         cudaDeviceReset();
     }
 
-    exeTimeToFile("artificial_features_csv.txt", "artificial_features/", exeTimes, 10);
+    exeTimeToFile("artificial_testSizes_csv.txt", "artificial_testSizes/", exeTimes, 10);
 
     return 0;
 }

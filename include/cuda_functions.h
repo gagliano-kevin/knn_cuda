@@ -424,7 +424,7 @@ int getSharedMemoryPerBlock(int device){
 
 void writeAllInfoToFile(const char *filename, int device){
 
-    const char* dirname = "par_hw_info/"; 
+    const char* dirname = "sw_hw_info/"; 
     
     createDirectory(dirname); 
 

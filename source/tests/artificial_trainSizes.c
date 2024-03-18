@@ -12,15 +12,14 @@ int main() {
     int trainSize = 1000; // Size of the dataset
     int testSize = 100; // Size of the dataset
     int mean = 10; // Mean value for class component
-
-    
     int num_features = 10; // Number of features (and classes)
+    int num_classes = num_features; // Number of classes
 
     double exeTimes[10];
 
-    for(num_features = 10; num_features <= 100; num_features += 10){
+    for(trainSize = 1000; trainSize <= 10000; trainSize += 1000){
 
-        int num_classes = num_features; // Number of classes
+
         int errorCount = 0;
 
         double avgKnnElaps = 0.0;
@@ -72,14 +71,15 @@ int main() {
         avgKnnElaps /= 1;
         //printf("Average elapsed time for knn computation: %f\n", avgKnnElaps);
 
-        exeTimes[(num_features/10)-1] = avgKnnElaps;
+        exeTimes[(trainSize/1000)-1] = avgKnnElaps;
+
 
         // Print results to file
-        appendResultsToFile(errorCount, testSize, "artificial_features_c.txt", "artificial_features/", trainSize, num_features, k, metric, exp, avgKnnElaps);
+        appendResultsToFile(errorCount, testSize, "artificial_trainSizes_c.txt", "artificial_trainSizes/", trainSize, num_features, k, metric, exp, avgKnnElaps);
 
     }
 
-    exeTimeToFile("artificial_features_csv.txt", "artificial_features/", exeTimes, 10);
+    exeTimeToFile("artificial_trainSizes_csv.txt", "artificial_trainSizes/", exeTimes, 10);
 
 
 
