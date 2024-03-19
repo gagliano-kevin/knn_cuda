@@ -218,7 +218,7 @@ void exeTimeToFile(const char *filename, const char *dirname, double* exeTimes, 
     }
 
     for(int i = 0; i < num_executions; i++){
-        fprintf(file, "%f ; ", exeTimes[i]);
+        fprintf(file, "%f , ", exeTimes[i]);
     }
     fprintf(file, "\n");
 
