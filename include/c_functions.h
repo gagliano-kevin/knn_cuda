@@ -89,7 +89,6 @@ void appendResultsToFile(int errorCount, int testSize, const char *filename, con
         printf("Error opening file!\n");
         return;
     }
-
     fprintf(file, "knn execution information:\n");
     fprintf(file, "knn execution time %f sec\n", exeTime);
     fprintf(file, "\nData information:\n");
@@ -123,7 +122,6 @@ void writeResultsToFile(int * trainLabels, int *results, int errorCount, int tes
         printf("Error opening file!\n");
         return;
     }
-
     fprintf(file, "knn execution information:\n");
     fprintf(file, "knn execution time %f sec\n", exeTime);
     fprintf(file, "\nData information:\n");
@@ -168,7 +166,6 @@ void writeAllInfoToFile(const char *filename) {
         printf("Error opening file.\n");
         return;
     }
-
     // Get compiler information
     fprintf(file, "Compiler information:\n");
     char* compilerInfo = getCompilerInfo();
@@ -176,7 +173,6 @@ void writeAllInfoToFile(const char *filename) {
         fprintf(file, "%s\n", compilerInfo);
         free(compilerInfo); 
     }
-
     // Get operating system information
     fprintf(file, "Operating System information:\n");
     char* osInfo = getOSInfo();
@@ -184,9 +180,7 @@ void writeAllInfoToFile(const char *filename) {
         fprintf(file, "%s\n", osInfo);
         free(osInfo); 
     }
-
     fprintf(file, "\n\n");
-
     // Get system information
     struct sysinfo sys_info;
     if (sysinfo(&sys_info) != 0) {
@@ -194,7 +188,6 @@ void writeAllInfoToFile(const char *filename) {
         fclose(file);
         return;
     }
-
     // Write system memory informations and number of processes to file
     fprintf(file, "System Information:\n");
     fprintf(file, "--------------------\n");
@@ -203,8 +196,6 @@ void writeAllInfoToFile(const char *filename) {
     fprintf(file, "Total Swap: %lu MB\n", sys_info.totalswap / (1024 * 1024));
     fprintf(file, "Free Swap: %lu MB\n", sys_info.freeswap / (1024 * 1024));
     fprintf(file, "Number of procs: %d\n", sys_info.procs);
-
-
     // Write CPU information to file
     fprintf(file, "\nCPU Information:\n");
     fprintf(file, "----------------\n");
@@ -218,12 +209,10 @@ void writeAllInfoToFile(const char *filename) {
     while (fgets(line, sizeof(line), cpuinfo)) {
         fputs(line, file);
     }
-
     fclose(cpuinfo);
     fclose(file);
     printf("Hardware and Software specification has been written to %s\n\n", path);
 }
-
 
 
 #endif

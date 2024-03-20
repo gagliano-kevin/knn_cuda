@@ -137,7 +137,7 @@ extern "C" __global__ void knn(double *distances, int trainSize, int *indexes, i
                 if(threadIdx.x == workers - 1){                                 // Last thread will take care of the remaining portion of the data
                     endIdx = trainSize;
                 }
-                bubbleSort(sharedDistances2, sharedIndexes2, startIdx, endIdx); // Sort the distances and indexes in first portion of shared memory
+                bubbleSort(sharedDistances2, sharedIndexes2, startIdx, endIdx); // Sort the distances and indexes in second portion of shared memory
                 // Copy the sorted distances and indexes to first portion of shared memory
                 for (int i = 0; i < k; i++) {
                     sharedDistances[threadIdx.x * k + i] = sharedDistances2[startIdx + i];
@@ -147,32 +147,29 @@ extern "C" __global__ void knn(double *distances, int trainSize, int *indexes, i
                 __syncthreads();                                                // Synchronize threads within the block
             }
         }
-        trainSize = k * workers;                                                // Update the training set size 
+        trainSize = k * workers;                                                // Update the working training set size 
     }
-
-    // last iteration (sequential with 1 worker)
+    // Last iteration (sequential processsing with 1 worker)
     if(threadIdx.x == 0){
         double *distances;
         int *indexes;
-        if(iter % 2 == 0){
+        if(iter % 2 == 0){                                                      // Even iteration (read from second portion of shared memory)
             distances = sharedDistances2;
             indexes = sharedIndexes2;
-        } else {
+        } else {                                                                // Odd iteration (read from first portion of shared memory)
             distances = sharedDistances;
             indexes = sharedIndexes;
         }
-        bubbleSort(distances, indexes, 0, trainSize);
-
+        bubbleSort(distances, indexes, 0, trainSize);                           
         // Nearest class election
-        int* classCounts = new int[classes];
+        int* classCounts = new int[classes];                                    // Allocate memory for class counts array
         // Initialize all elements to zero
         for (int i = 0; i < classes; ++i) {
             classCounts[i] = 0;
         }
         for (int i = 0; i < k; i++){        
-            classCounts[trainLabels[indexes[i]]]++;
+            classCounts[trainLabels[indexes[i]]]++;                             // Count the occurrences of each class in the k-nearest neighbors
         }
-
         int max = 0; 
         int maxClass = -1;
         for (int i = 0; i < classes; i++){        
@@ -181,23 +178,22 @@ extern "C" __global__ void knn(double *distances, int trainSize, int *indexes, i
                 maxClass = i;
             }
         }
-        predictions[row] = maxClass;
-        delete[] classCounts;
+        predictions[row] = maxClass;                                            // Assign the class with the maximum occurrences to the test example
+        delete[] classCounts;                                                   // Free the memory allocated for class counts array
     }
 }
 
+
+// Append execution information and results to file 
 void appendResultsToFile(int errorCount, int testSize, const char *filename, const char *dirname, int trainSize, int features, int k, int metric, int exp, unsigned int *distDim, unsigned int *predDim, int workers, int alpha, int beta, double kernelTime1, double kernelTime2, int sharedMemory, int maxSharedMemory, int sharedWorkers){
     createDirectory(dirname); 
-
-    char path[256]; // Assuming max path length of 256 characters
-    snprintf(path, sizeof(path), "%s%s", dirname, filename);
-    
-    FILE *file = fopen(path, "a");
+    char path[256];                                                                                         // Assuming max path length of 256 characters
+    snprintf(path, sizeof(path), "%s%s", dirname, filename);                                                // Concatenate the directory and filename
+    FILE *file = fopen(path, "a");                                                                          // Open the file in append mode
     if (file == NULL) {
         printf("Error opening file!\n");
         return;
     }
-
     fprintf(file, "Kernel launch information:\n");
     fprintf(file, "Grid dimension in knnDistances kernel: %u , %u\n", distDim[0], distDim[1]);
     fprintf(file, "Block dimension in knnDistances kernel: %u , %u\n", distDim[2], distDim[3]);
@@ -210,12 +206,10 @@ void appendResultsToFile(int errorCount, int testSize, const char *filename, con
     fprintf(file, "Shared memory used: %d bytes \t<---->\t Max shared memory per block: %d bytes\n", sharedMemory, maxSharedMemory);
     fprintf(file, "knnDistances execution time %f sec\n", kernelTime1);
     fprintf(file, "knn execution time %f sec\n", kernelTime2);
-
     fprintf(file, "\nData information:\n");
     fprintf(file, "Training data size: %d\n", trainSize);
     fprintf(file, "Test data size: %d\n", testSize);
     fprintf(file, "Number of features: %d\n", features);
-
     fprintf(file, "\nKNN Parameters:\n");
     fprintf(file, "k: %d\n", k);
     fprintf(file, "Distance Metric: ");
@@ -226,28 +220,23 @@ void appendResultsToFile(int errorCount, int testSize, const char *filename, con
     } else if (metric == 3) {
         fprintf(file, "Minkowski (p=%d)\n", exp);
     }
-
     fprintf(file, "\nNumber of prediction errors: %d\n", errorCount);
     fprintf(file, "\n-------------------------------------------------------------------------------------------------------------------------------------------\n\n");
-
 
     fclose(file);
 }
 
 
+// Write execution information and detailed classification results to file
 void writeResultsToFile(int * trainLabels, int *results, int errorCount, int testSize, const char *filename, const char *dirname, int trainSize, int features, int k, int metric, int exp, unsigned int *distDim, unsigned int *predDim, int workers, int alpha, int beta, double kernelTime1, double kernelTime2, int sharedMemory, int maxSharedMemory, int sharedWorkers) {
-    
     createDirectory(dirname); 
-
-    char path[256]; // Assuming max path length of 256 characters
-    snprintf(path, sizeof(path), "%s%s", dirname, filename);
-    
-    FILE *file = fopen(path, "w");
+    char path[256];                                                                                         // Assuming max path length of 256 characters
+    snprintf(path, sizeof(path), "%s%s", dirname, filename);                                                // Concatenate the directory and filename
+    FILE *file = fopen(path, "w");                                                                          // Open the file in write mode                                            
     if (file == NULL) {
         printf("Error opening file!\n");
         return;
     }
-
     fprintf(file, "Kernel launch information:\n");
     fprintf(file, "Grid dimension in knnDistances kernel: %u , %u\n", distDim[0], distDim[1]);
     fprintf(file, "Block dimension in knnDistances kernel: %u , %u\n", distDim[2], distDim[3]);
@@ -260,12 +249,10 @@ void writeResultsToFile(int * trainLabels, int *results, int errorCount, int tes
     fprintf(file, "Shared memory used: %d bytes \t<---->\t Max shared memory per block: %d bytes\n", sharedMemory, maxSharedMemory);
     fprintf(file, "knnDistances execution time %f sec\n", kernelTime1);
     fprintf(file, "knn execution time %f sec\n", kernelTime2);
-
     fprintf(file, "\nData information:\n");
     fprintf(file, "Training data size: %d\n", trainSize);
     fprintf(file, "Test data size: %d\n", testSize);
     fprintf(file, "Number of features: %d\n", features);
-
     fprintf(file, "\nKNN Parameters:\n");
     fprintf(file, "k: %d\n", k);
     fprintf(file, "Distance Metric: ");
@@ -276,10 +263,9 @@ void writeResultsToFile(int * trainLabels, int *results, int errorCount, int tes
     } else if (metric == 3) {
         fprintf(file, "Minkowski (p=%d)\n", exp);
     }
-
     fprintf(file, "\nNumber of prediction errors: %d\n", errorCount);
     fprintf(file, "\nResults:\n");
-    char outcome[25];
+    char outcome[25];                                                                                       // String to store the outcome of the classification
     for (int i = 0; i < testSize; ++i) {
         if(results[i] == trainLabels[i]){
             strcpy(outcome, "correctly classified");
@@ -288,97 +274,72 @@ void writeResultsToFile(int * trainLabels, int *results, int errorCount, int tes
         }
         fprintf(file, "Test example %3d  %-22s -> Predicted class: %1d , Expected class: %1d\n", i + 1, outcome, results[i], trainLabels[i]);
     }
-
     fclose(file);
-
     printf("Execution results has been written to %s\n\n", path);
 }
 
 
-
+// Write device information to file
 void writeDeviceInfo(const char *filename, int device){
     FILE *file = fopen(filename, "w");
     if (file == NULL) {
         printf("Error opening file!\n");
         return;
     }
-
-    int dev, driverVersion = 0, runtimeVersion = 0;
-
+    int dev, driverVersion = 0, runtimeVersion = 0;                                        // Device, driver and runtime version variables
     dev = device;
-    cudaDeviceProp deviceProp;
+    cudaDeviceProp deviceProp;                                                              
     CHECK(cudaGetDeviceProperties(&deviceProp, dev));
     fprintf(file, "Device %d: \"%s\"\n", dev, deviceProp.name);
-
     CHECK(cudaDriverGetVersion(&driverVersion));
     CHECK(cudaRuntimeGetVersion(&runtimeVersion));
-
     fprintf(file, "CUDA Driver Version / Runtime Version %d.%d / %d.%d\n",
     driverVersion/1000, (driverVersion%100)/10,
     runtimeVersion/1000, (runtimeVersion%100)/10);
-
     fprintf(file, "CUDA Capability Major/Minor version number: %d.%d\n",
     deviceProp.major, deviceProp.minor);
-
     fprintf(file, "Total amount of global memory: %.2f GBytes (%llu bytes)\n",
     (float)deviceProp.totalGlobalMem/(pow(1024.0,3)),
     (unsigned long long) deviceProp.totalGlobalMem);
-
     fprintf(file, "GPU Clock rate: %.0f MHz (%0.2f GHz)\n",
     deviceProp.clockRate * 1e-3f, deviceProp.clockRate * 1e-6f);
-
     fprintf(file, "Memory Clock rate: %.0f Mhz\n", deviceProp.memoryClockRate * 1e-3f);
-
     fprintf(file, "Memory Bus Width: %d-bit\n", deviceProp.memoryBusWidth);
-
     if (deviceProp.l2CacheSize) {
         fprintf(file, "L2 Cache Size: %d bytes\n", deviceProp.l2CacheSize);
     }
-
     fprintf(file, "Max Texture Dimension Size (x,y,z) "
     " 1D=(%d), 2D=(%d,%d), 3D=(%d,%d,%d)\n",
     deviceProp.maxTexture1D, deviceProp.maxTexture2D[0],
     deviceProp.maxTexture2D[1], deviceProp.maxTexture3D[0], 
     deviceProp.maxTexture3D[1], deviceProp.maxTexture3D[2]);
-
     fprintf(file, "Max Layered Texture Size (dim) x layers 1D=(%d) x %d, 2D=(%d,%d) x %d\n",
     deviceProp.maxTexture1DLayered[0], deviceProp.maxTexture1DLayered[1],
     deviceProp.maxTexture2DLayered[0], deviceProp.maxTexture2DLayered[1],
     deviceProp.maxTexture2DLayered[2]);
-
     fprintf(file, "Total amount of constant memory: %lu bytes\n", deviceProp.totalConstMem);
-    
     fprintf(file, "Total amount of shared memory per block: %lu bytes\n", deviceProp.sharedMemPerBlock);
-    
     fprintf(file, "Total number of registers available per block: %d\n",  deviceProp.regsPerBlock);
-    
     fprintf(file, "Warp size: %d\n", deviceProp.warpSize);
-    
     fprintf(file, "Maximum number of threads per multiprocessor: %d\n", deviceProp.maxThreadsPerMultiProcessor);
-    
     fprintf(file, "Maximum number of threads per block: %d\n", deviceProp.maxThreadsPerBlock);
-    
     fprintf(file, "Maximum sizes of each dimension of a block: %d x %d x %d\n",
     deviceProp.maxThreadsDim[0], deviceProp.maxThreadsDim[1], deviceProp.maxThreadsDim[2]);
-    
     fprintf(file, "Maximum sizes of each dimension of a grid: %d x %d x %d\n",
     deviceProp.maxGridSize[0], deviceProp.maxGridSize[1], deviceProp.maxGridSize[2]);
-    
     fprintf(file, "Maximum memory pitch: %lu bytes\n", deviceProp.memPitch);
-
     fclose(file);
 }
 
 
+// Set the best device based on the maximum number of multiprocessors
 int setBestDevice(){
     int numDevices = 0;
     CHECK(cudaGetDeviceCount(&numDevices));
-
     if(numDevices == 0){
         printf("There are no available device(s) that support CUDA\n");
         return -1;
     }
-
     if(numDevices > 1) {
         printf("Detected %d CUDA capable device(s)\n", numDevices);
         int maxMultiprocessors = 0, maxDevice = 0;
@@ -421,13 +382,11 @@ int getSharedMemoryPerBlock(int device){
 }
 
 
+// Write hardware and software information of the running system to file
 void writeAllInfoToFile(const char *filename, int device){
-
     const char* dirname = "sw_hw_info/"; 
-    
     createDirectory(dirname); 
-
-    char path[256]; // Assuming max path length of 256 characters
+    char path[256];                                                                                         // Assuming max path length of 256 characters
     snprintf(path, sizeof(path), "%s%s", dirname, filename);
     FILE *file = fopen(path, "w");
     if (file == NULL) {
