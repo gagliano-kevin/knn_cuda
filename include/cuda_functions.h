@@ -2,24 +2,20 @@
 #define CUDA_FUNCTIONS_H
 
 #include "../include/common.h"
-
 #include <cuda_runtime.h>
 #include <sys/sysinfo.h>
-
-
 
 #define FILE_NAME __FILE__
 #define LINE __LINE__
 
 
-
-
+// Check function for CUDA errors
 void CHECK(const cudaError_t call) {
-    const cudaError_t error = call;
-    if(error != cudaSuccess){
-        printf("Error: %s:%d, ", FILE_NAME, LINE);
-        printf("code: %d, reason: %s\n", error, cudaGetErrorString(error));
-        exit(1);
+    const cudaError_t error = call;                                             // Store the CUDA function call's return value
+    if(error != cudaSuccess){                                                   // Check if the returned value indicates an error
+        printf("Error: %s:%d, ", FILE_NAME, LINE);                              // Print the file and line number of the error
+        printf("code: %d, reason: %s\n", error, cudaGetErrorString(error));     // Print the error code and its description
+        exit(1);                                                                // Exit the program with an error status
     }
 }
 
@@ -27,16 +23,16 @@ void CHECK(const cudaError_t call) {
 // Compute distance between two points based on the selected metric
 __device__ double computeDistance(double *point1, double *point2, int metric, int exp, int num_features) {
     double distance = 0.0;
-    if (metric == 1) { // Euclidean distance
+    if (metric == 1) {                                                          // Euclidean distance
         for (int i = 0; i < num_features; i++) {
             distance += (point1[i] - point2[i]) * (point1[i] - point2[i]);
         }
         distance = sqrt(distance);
-    } else if (metric == 2) { // Manhattan distance
+    } else if (metric == 2) {                                                   // Manhattan distance
         for (int i = 0; i < num_features; i++) {
             distance += fabs(point1[i] - point2[i]);
         }
-    } else if (metric == 3) { // Minkowski distance with p = exp
+    } else if (metric == 3) {                                                   // Minkowski distance 
         double sum = 0.0;
         for (int i = 0; i < num_features; i++) {
             sum += pow(fabs(point1[i] - point2[i]), exp);
@@ -47,17 +43,18 @@ __device__ double computeDistance(double *point1, double *point2, int metric, in
 }
 
 
-// distances matrix has size testSize x TrainSize 
+// Kernel to compute distances between test and train data
 __global__ void knnDistances(double *trainData, double *testData, double *distances, int trainSize, int testSize, int metric, int exp, int num_features) { 
-    unsigned int ix = threadIdx.x + blockIdx.x * blockDim.x;
-    unsigned int iy = threadIdx.y + blockIdx.y * blockDim.y;
-    unsigned int idx = iy * trainSize + ix; 
-    if(ix < trainSize && iy < testSize){
-        distances[idx]=computeDistance(&trainData[ix * num_features], &testData[iy * num_features], metric, exp, num_features);
+    unsigned int ix = threadIdx.x + blockIdx.x * blockDim.x;            // Index of the train data
+    unsigned int iy = threadIdx.y + blockIdx.y * blockDim.y;            // Index of the test data
+    unsigned int idx = iy * trainSize + ix;                             // Index of the distance array
+    if(ix < trainSize && iy < testSize){                                // Check if the thread is within the bounds of the data
+        distances[idx]=computeDistance(&trainData[ix * num_features], &testData[iy * num_features], metric, exp, num_features);     // num_features is the stride between two consecutive elements
     }
 }
 
 
+// Swap elements in both distances and indexes arrays
 __device__ void swap(double *distances, int *indexes, int i, int j) {
     double tempDist = distances[i];
     int tempInd = indexes[i];
@@ -68,6 +65,7 @@ __device__ void swap(double *distances, int *indexes, int i, int j) {
 }
 
 
+// Bubble sort algorithm to sort distances and indexes arrays within bounds (startIdx, endIdx)
 __device__ void bubbleSort(double *distances, int *indexes, int startIdx, int endIdx) {
     for (int i = startIdx; i < endIdx - 1; i++) {
         for (int j = startIdx; j < endIdx - i + startIdx - 1; j++) {
@@ -79,27 +77,26 @@ __device__ void bubbleSort(double *distances, int *indexes, int startIdx, int en
 }
 
 
-// exter "C" is used to avoid name mangling
-extern "C" __global__ void knn(double *distances, int trainSize, int *indexes, int k, int *predictions, int *trainLabels, int sharedMemoryIdx, int alpha, int beta, int classes) {
-    int row = blockIdx.x;
-    int portion = (int)trainSize / blockDim.x;
-
-    int startIdx = row * trainSize + threadIdx.x * portion;
-    int endIdx = startIdx + portion;
-    // last thread block takes care of the remaining portion of the dataset
+// Kernel to compute k-nearest neighbors
+extern "C" __global__ void knn(double *distances, int trainSize, int *indexes, int k, int *predictions, int *trainLabels, int sharedMemoryIdx, int alpha, int beta, int classes) {      // exter "C" is used to avoid name mangling
+    int row = blockIdx.x;                                                       // Each block is responsible for a subset of distances array (relative to a test example)
+    int portion = (int)trainSize / blockDim.x;                                  // Portion of the data (distances array) that each thread is responsible for
+    int startIdx = row * trainSize + threadIdx.x * portion;                     // Start index of the portion of the data 
+    int endIdx = startIdx + portion;                                            // End index of the portion of the data 
+    // Last thread of each block takes care of the remaining portion of the data
     if(threadIdx.x == blockDim.x - 1){
-        endIdx = startIdx + (trainSize - (blockDim.x - 1) * portion);
+        endIdx = startIdx + (trainSize - (blockDim.x - 1) * portion);           // Adjust the end index
     }
 
-    bubbleSort(distances, indexes, startIdx, endIdx);
+    bubbleSort(distances, indexes, startIdx, endIdx);                           // Sort the distances and indexes arrays within the portion of the data
     
-    // Dynamically allocate shared memory for distances and indexes
-    extern __shared__ double sharedMemory[];
-    double *sharedDistances = sharedMemory;
-    int *sharedIndexes = (int*)&sharedMemory[sharedMemoryIdx];
+    // Shared memory allocation for distances and indexes
+    extern __shared__ double sharedMemory[];                                    
+    double *sharedDistances = sharedMemory;                                     // First portion of shared memory for distances
+    int *sharedIndexes = (int*)&sharedMemory[sharedMemoryIdx];                  // First portion of shared memory for indexes
 
-    double *sharedDistances2 = &sharedDistances[k * blockDim.x];
-    int *sharedIndexes2 = &sharedIndexes[k * blockDim.x];
+    double *sharedDistances2 = &sharedDistances[k * blockDim.x];                // Second portion of shared memory for distances (contiguous to the first portion of shared memory for distances)
+    int *sharedIndexes2 = &sharedIndexes[k * blockDim.x];                       // Second portion of shared memory for indexes (contiguous to the first portion of shared memory for indexes)
 
     for (int i = 0; i < k; i++) {
         sharedDistances[threadIdx.x * k + i] = distances[startIdx + i];
