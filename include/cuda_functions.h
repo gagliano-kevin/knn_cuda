@@ -98,54 +98,56 @@ extern "C" __global__ void knn(double *distances, int trainSize, int *indexes, i
     double *sharedDistances2 = &sharedDistances[k * blockDim.x];                // Second portion of shared memory for distances (contiguous to the first portion of shared memory for distances)
     int *sharedIndexes2 = &sharedIndexes[k * blockDim.x];                       // Second portion of shared memory for indexes (contiguous to the first portion of shared memory for indexes)
 
+    // Copy the sorted distances and indexes to shared memory (relative to the portion of the data that each thread is responsible for)
     for (int i = 0; i < k; i++) {
         sharedDistances[threadIdx.x * k + i] = distances[startIdx + i];
         sharedIndexes[threadIdx.x * k + i] = indexes[startIdx + i];
     }
     
-    __syncthreads();
+    __syncthreads();                                                            // Synchronize threads within the block
 
+    int iter = 1;                                                               // Iteration counter
+    int workers = blockDim.x;                                                   // Number of initial workers (threads) that operated in global memory
+    trainSize = k * workers;                                                    // Total size of the data on which the threads will operate
 
-    int iter = 1;
-    int workers = blockDim.x;
-    trainSize = k * workers;
-
-    while(trainSize >= beta * k){
-        iter++;
-        workers = (int)workers / alpha;
-        portion = alpha * k;
-        if(iter % 2 == 0){      // even iteration
-            if(threadIdx.x < workers){
+    while(trainSize >= beta * k){                                               // End of parallel processsing condition
+        iter++; 
+        workers = (int)workers / alpha;                                         // Number of workers (threads) that will operate in shared memory
+        portion = alpha * k;                                                    // Portion of the data that each thread will be responsible for
+        if(iter % 2 == 0){                                                      // Even iteration (write to second portion of shared memory)
+            if(threadIdx.x < workers){                                          // Check if the thread is within the bounds of the workers number
                 int startIdx = threadIdx.x * portion;
                 int endIdx = startIdx + portion;
-                if(threadIdx.x == workers - 1){ // last thread 
+                if(threadIdx.x == workers - 1){                                 // Last thread will take care of the remaining portion of the data
                     endIdx = trainSize;
                 }
-                bubbleSort(sharedDistances, sharedIndexes, startIdx, endIdx);
+                bubbleSort(sharedDistances, sharedIndexes, startIdx, endIdx);   // Sort the distances and indexes in first portion of shared memory
+                // Copy the sorted distances and indexes to second portion of shared memory
                 for (int i = 0; i < k; i++) {
                     sharedDistances2[threadIdx.x * k + i] = sharedDistances[startIdx + i];
                     sharedIndexes2[threadIdx.x * k + i] = sharedIndexes[startIdx + i];
                 }
                 
-                __syncthreads();
+                __syncthreads();                                                // Synchronize threads within the block
             }
-        } else {        // odd iteration
-            if(threadIdx.x < workers){
+        } else {                                                                // Odd iteration (write to first portion of shared memory)
+            if(threadIdx.x < workers){                                          // Check if the thread is within the bounds of the workers number
                 int startIdx = threadIdx.x * portion;
                 int endIdx = startIdx + portion;
-                if(threadIdx.x == workers - 1){ // last thread 
+                if(threadIdx.x == workers - 1){                                 // Last thread will take care of the remaining portion of the data
                     endIdx = trainSize;
                 }
-                bubbleSort(sharedDistances2, sharedIndexes2, startIdx, endIdx);
+                bubbleSort(sharedDistances2, sharedIndexes2, startIdx, endIdx); // Sort the distances and indexes in first portion of shared memory
+                // Copy the sorted distances and indexes to first portion of shared memory
                 for (int i = 0; i < k; i++) {
                     sharedDistances[threadIdx.x * k + i] = sharedDistances2[startIdx + i];
                     sharedIndexes[threadIdx.x * k + i] = sharedIndexes2[startIdx + i];
                 }
                 
-                __syncthreads();
+                __syncthreads();                                                // Synchronize threads within the block
             }
         }
-        trainSize = k * workers;
+        trainSize = k * workers;                                                // Update the training set size 
     }
 
     // last iteration (sequential with 1 worker)
