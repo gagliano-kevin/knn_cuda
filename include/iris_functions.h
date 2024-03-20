@@ -12,7 +12,7 @@
 #define CLASSES 3
 
 
-
+// Data structure to store the Iris dataset samples
 typedef struct {
     int id;
     float sepal_length;
@@ -23,54 +23,45 @@ typedef struct {
 } IrisData;
 
 
+// Function to read the Iris dataset from a CSV file
 int readIrisDataset(const char *filename, IrisData **iris_data, int *num_samples) {
     FILE *file;
     char line[MAX_LINE_SIZE];
     char *token;
-
     // Open the CSV file
     file = fopen(filename, "r");
     if (file == NULL) {
         fprintf(stderr, "Error opening file\n");
         return 1;
     }
-
-    // Skip the first line
+    // Check for empty file
     if (fgets(line, sizeof(line), file) == NULL) {
         fprintf(stderr, "Error reading file\n");
         fclose(file);
         return 1;
     }
-
-    int count = 0;
+    int count = 0;                                                                  
     *num_samples = 0;
     // Count the number of lines (excluding the first)
     while (fgets(line, sizeof(line), file) != NULL) {
         (*num_samples)++;
     }
-
-    // Allocate memory for IrisData array
-    *iris_data = (IrisData *)malloc(*num_samples * sizeof(IrisData));
+    *iris_data = (IrisData *)malloc(*num_samples * sizeof(IrisData));           // Allocate memory for the dataset  
     if (*iris_data == NULL) {
         fprintf(stderr, "Memory allocation failed\n");
         fclose(file);
         return 1;
     }
-
-    // Reset file pointer to the beginning
-    fseek(file, 0, SEEK_SET);
-    // Skip the first line
-    fgets(line, sizeof(line), file);
-
+    fseek(file, 0, SEEK_SET);                                                   // Reset file pointer to the beginning
+    fgets(line, sizeof(line), file);                                            // Skip the first line             
     // Read each subsequent line of the file
     while (fgets(line, sizeof(line), file) != NULL) {
         IrisData *iris = &((*iris_data)[count]);
         int field_index = 0;
-
         // Tokenize each line based on the comma delimiter
         token = strtok(line, ",");
         while (token != NULL && field_index < NUM_FIELDS) {
-            // Parse and store the tokenized values into appropriate data structures
+            // Parse and store the tokenized values in the IrisData structure
             switch (field_index) {
                 case 0:
                     iris->id = atoi(token);
@@ -92,16 +83,12 @@ int readIrisDataset(const char *filename, IrisData **iris_data, int *num_samples
                     strcpy(iris->species, token);
                     break;
             }
-            // Get the next token
-            token = strtok(NULL, ",");
-            field_index++;
+            token = strtok(NULL, ",");                                          // Move to the next token
+            field_index++;                                                      
         }
-        count++;
+        count++;                                                                // Move to the next line
     }
-
-    // Close the file
     fclose(file);
-
     return 0;
 }
 
@@ -115,12 +102,12 @@ int mapSpeciesToClass(const char *species) {
     } else if (strcmp(species, "Iris-virginica") == 0) {
         return 2;
     } else {
-        return -1; // Unknown species
+        return -1;                                                              // Unknown species
     }
 }
 
 
-// Training set composed of all the dataset samples
+// Create training set composed of all the dataset samples
 void createTrainingSet(IrisData *iris_data, double *trainData, int *trainLabels, int numSamples){
     for(int i = 0; i < numSamples; i++){
         trainData[i*FEATURES] = iris_data[i].sepal_length;
@@ -132,7 +119,7 @@ void createTrainingSet(IrisData *iris_data, double *trainData, int *trainLabels,
 }
 
 
-// Test set as a subset of the training set (1/3 balanced of each class <- just for testing)
+//Create a test set composed of 1/3 of the training set (balanced on each class)
 void createTestSet(double *trainData, double *testData, int *trainLabels, int *testLabels, int numDataSamples){
     for (int i = 0, j = 0; i < numDataSamples; i += 3, j++){
         testData[j*FEATURES] = trainData[i*FEATURES];
@@ -142,8 +129,6 @@ void createTestSet(double *trainData, double *testData, int *trainLabels, int *t
         testLabels[j] = trainLabels[i];
     }
 }
-
-
 
 
 #endif

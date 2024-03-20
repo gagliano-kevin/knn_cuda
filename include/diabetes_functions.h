@@ -5,12 +5,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_FIELD_LEN 20
-#define MAX_FIELDS 9
+#define MAX_FIELD_LEN 256
 #define FEATURES 8
 #define CLASSES 2
 
-// Define a struct to represent each row of the dataset
+// Struct to represent each row of the dataset
 typedef struct {
     double pregnancies;
     double glucose;
@@ -24,51 +23,42 @@ typedef struct {
 } Row;
 
 
+// Read the CSV file and store the data in an array of structs
 int readCSV(const char *filename, Row **dataset, int *numRows) {
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
         printf("Error opening file.\n");
         return 0;
     }
-
-    char line[MAX_FIELDS * MAX_FIELD_LEN]; // Adjusted size for line buffer
-    char *token;
-
-    // Skip the first line (column headers)
-    if (fgets(line, sizeof(line), file) == NULL) {
+    char line[MAX_FIELD_LEN]; 
+    char *token;                                                // String token to store the values of each field
+    if (fgets(line, sizeof(line), file) == NULL) {              // Read the first line of the file to check for errors
         printf("Error reading file.\n");
         fclose(file);
         return 0;
     }
-
-    *numRows = 0;
+    *numRows = 0;                                               // Initialize the number of rows to 0
     // Calculate the total number of rows in the file
     while (fgets(line, sizeof(line), file) != NULL) {
         (*numRows)++;
     }
-
-    // Allocate memory for the dataset
-    *dataset = (Row *)malloc(*numRows * sizeof(Row));
+    *dataset = (Row *)malloc(*numRows * sizeof(Row));           // Allocate memory for the dataset
     if (*dataset == NULL) {
         printf("Error allocating memory.\n");
         fclose(file);
         return 0;
     }
-
-    // Reset file pointer to beginning of the file
-    fseek(file, 0, SEEK_SET);
-
-    // Skip the first line (column headers)
-    fgets(line, sizeof(line), file);
-
+    fseek(file, 0, SEEK_SET);                                   // Reset the file pointer to the beginning of the file
+    fgets(line, sizeof(line), file);                            // Skip the first line (headers)
     // Read data into the dataset
     for (int i = 0; i < *numRows; i++) {
-        if (fgets(line, sizeof(line), file) == NULL) {
+        if (fgets(line, sizeof(line), file) == NULL) {          // Error checking
             printf("Error reading file.\n");
             fclose(file);
-            free(*dataset); // Free allocated memory before returning
+            free(*dataset); 
             return 0;
         }
+        // Tokenize the line and store the values in the struct
         token = strtok(line, ",");
         (*dataset)[i].pregnancies = atof(token);
 
@@ -96,7 +86,6 @@ int readCSV(const char *filename, Row **dataset, int *numRows) {
         token = strtok(NULL, ",");
         (*dataset)[i].label = atoi(token);
     }
-
     fclose(file);
     return 1;
 }
@@ -117,7 +106,6 @@ void extractData(const Row *dataset, double *features, int *labels, int numRows)
         labels[i] = dataset[i].label;
     }
 }
-
 
 
 #endif
