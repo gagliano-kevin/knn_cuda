@@ -340,7 +340,7 @@ int setBestDevice(){
         printf("There are no available device(s) that support CUDA\n");
         return -1;
     }
-    if(numDevices > 1) {
+    if(numDevices > 1) {                                                        // If there are multiple devices
         printf("Detected %d CUDA capable device(s)\n", numDevices);
         int maxMultiprocessors = 0, maxDevice = 0;
         for (int device=0; device<numDevices; device++) {
@@ -356,7 +356,7 @@ int setBestDevice(){
         CHECK(cudaGetDeviceProperties(&best_prop, maxDevice));
         printf("Setting Device %d : \"%s\"\n\n", maxDevice, best_prop.name);
         return maxDevice;
-    } else {
+    } else {                                                                    // If there is only one device
         printf("Detected only one CUDA Device ...\n");
         int dev = 0;
         CHECK(cudaSetDevice(dev));
@@ -368,6 +368,7 @@ int setBestDevice(){
 }
 
 
+// Query the device for the maximum number of threads per block
 int getMaxThreadsPerBlock(int device){
     cudaDeviceProp deviceProp;
     CHECK(cudaGetDeviceProperties(&deviceProp, device));
@@ -375,6 +376,7 @@ int getMaxThreadsPerBlock(int device){
 }
 
 
+// Query the device for the total amount of shared memory per block
 int getSharedMemoryPerBlock(int device){
     cudaDeviceProp deviceProp;
     CHECK(cudaGetDeviceProperties(&deviceProp, device));
@@ -387,14 +389,14 @@ void writeAllInfoToFile(const char *filename, int device){
     const char* dirname = "sw_hw_info/"; 
     createDirectory(dirname); 
     char path[256];                                                                                         // Assuming max path length of 256 characters
-    snprintf(path, sizeof(path), "%s%s", dirname, filename);
+    snprintf(path, sizeof(path), "%s%s", dirname, filename);                                                // Concatenate the directory and filename
     FILE *file = fopen(path, "w");
     if (file == NULL) {
         printf("Error opening file!\n");
         return;
     }
 
-    int dev, driverVersion = 0, runtimeVersion = 0;
+    int dev, driverVersion = 0, runtimeVersion = 0;                                                         // Device, driver and runtime version variables
 
     dev = device;
     cudaDeviceProp deviceProp;
@@ -403,86 +405,64 @@ void writeAllInfoToFile(const char *filename, int device){
 
     CHECK(cudaDriverGetVersion(&driverVersion));
     CHECK(cudaRuntimeGetVersion(&runtimeVersion));
-
     fprintf(file, "CUDA Driver Version / Runtime Version %d.%d / %d.%d\n",
     driverVersion/1000, (driverVersion%100)/10,
     runtimeVersion/1000, (runtimeVersion%100)/10);
-
     fprintf(file, "CUDA Capability Major/Minor version number: %d.%d\n",
     deviceProp.major, deviceProp.minor);
-
     fprintf(file, "Total amount of global memory: %.2f GBytes (%llu bytes)\n",
     (float)deviceProp.totalGlobalMem/(pow(1024.0,3)),
     (unsigned long long) deviceProp.totalGlobalMem);
-
     fprintf(file, "GPU Clock rate: %.0f MHz (%0.2f GHz)\n",
     deviceProp.clockRate * 1e-3f, deviceProp.clockRate * 1e-6f);
-
     fprintf(file, "Memory Clock rate: %.0f Mhz\n", deviceProp.memoryClockRate * 1e-3f);
-
     fprintf(file, "Memory Bus Width: %d-bit\n", deviceProp.memoryBusWidth);
-
     if (deviceProp.l2CacheSize) {
         fprintf(file, "L2 Cache Size: %d bytes\n", deviceProp.l2CacheSize);
     }
-
     fprintf(file, "Max Texture Dimension Size (x,y,z) "
     " 1D=(%d), 2D=(%d,%d), 3D=(%d,%d,%d)\n",
     deviceProp.maxTexture1D, deviceProp.maxTexture2D[0],
     deviceProp.maxTexture2D[1], deviceProp.maxTexture3D[0], 
     deviceProp.maxTexture3D[1], deviceProp.maxTexture3D[2]);
-
     fprintf(file, "Max Layered Texture Size (dim) x layers 1D=(%d) x %d, 2D=(%d,%d) x %d\n",
     deviceProp.maxTexture1DLayered[0], deviceProp.maxTexture1DLayered[1],
     deviceProp.maxTexture2DLayered[0], deviceProp.maxTexture2DLayered[1],
     deviceProp.maxTexture2DLayered[2]);
-
     fprintf(file, "Total amount of constant memory: %lu bytes\n", deviceProp.totalConstMem);
-    
     fprintf(file, "Total amount of shared memory per block: %lu bytes\n", deviceProp.sharedMemPerBlock);
-    
     fprintf(file, "Total number of registers available per block: %d\n",  deviceProp.regsPerBlock);
-    
     fprintf(file, "Warp size: %d\n", deviceProp.warpSize);
-    
     fprintf(file, "Maximum number of threads per multiprocessor: %d\n", deviceProp.maxThreadsPerMultiProcessor);
-    
     fprintf(file, "Maximum number of threads per block: %d\n", deviceProp.maxThreadsPerBlock);
-    
     fprintf(file, "Maximum sizes of each dimension of a block: %d x %d x %d\n",
     deviceProp.maxThreadsDim[0], deviceProp.maxThreadsDim[1], deviceProp.maxThreadsDim[2]);
-    
     fprintf(file, "Maximum sizes of each dimension of a grid: %d x %d x %d\n",
     deviceProp.maxGridSize[0], deviceProp.maxGridSize[1], deviceProp.maxGridSize[2]);
-    
     fprintf(file, "Maximum memory pitch: %lu bytes\n", deviceProp.memPitch);
-
     fprintf(file, "\n\n");
-
+    // Get compiler information
     fprintf(file, "Compiler information:\n");
     char* compilerInfo = getCompilerInfo();
     if (compilerInfo != NULL) {
         fprintf(file, "%s\n", compilerInfo);
         free(compilerInfo); // Free the memory allocated for the string
     }
-
+    // Get nvcc information
     fprintf(file, "nvcc information:\n");
     char* nvccInfo = getNVCCInfo();
     if (nvccInfo != NULL) {
         fprintf(file, "%s\n", nvccInfo);
         free(nvccInfo); // Free the memory allocated for the string
     }
-
+    // Get operating system information
     fprintf(file, "Operating System information:\n");
     char* osInfo = getOSInfo();
     if (osInfo != NULL) {
         fprintf(file, "%s\n", osInfo);
         free(osInfo); // Free the memory allocated for the string
     }
-
     fprintf(file, "\n\n");
-
-
     // Get system information
     struct sysinfo sys_info;
     if (sysinfo(&sys_info) != 0) {
@@ -490,8 +470,7 @@ void writeAllInfoToFile(const char *filename, int device){
         fclose(file);
         return;
     }
-
-    // Write hardware specification to file
+    // Write system memory informations and number of processes to file
     fprintf(file, "System Information:\n");
     fprintf(file, "--------------------\n");
     fprintf(file, "Total RAM: %lu MB\n", sys_info.totalram / (1024 * 1024));
@@ -499,32 +478,27 @@ void writeAllInfoToFile(const char *filename, int device){
     fprintf(file, "Total Swap: %lu MB\n", sys_info.totalswap / (1024 * 1024));
     fprintf(file, "Free Swap: %lu MB\n", sys_info.freeswap / (1024 * 1024));
     fprintf(file, "Number of procs: %d\n", sys_info.procs);
-
-
+    // Write CPU information to file
     fprintf(file, "\nCPU Information:\n");
     fprintf(file, "----------------\n");
-
-    FILE *cpuinfo = fopen("/proc/cpuinfo", "r");
+    FILE *cpuinfo = fopen("/proc/cpuinfo", "r");                                                            // Open CPU info file
     if (cpuinfo == NULL) {
         printf("Error opening CPU info file.\n");
         fclose(file);
         return;
     }
-
-    char line[256];
+    char line[256];                                                                                         // Assuming max line length of 256 characters
     while (fgets(line, sizeof(line), cpuinfo)) {
         fputs(line, file);
     }
-
     fclose(cpuinfo);
     fclose(file);
-
     printf("\nHardware specification has been written to %s\n\n", path);
 }
 
-
+// Compute the nearest power of two of a given number (used in workers default calculation with too big alpha factor and small dataset)
 int nearestPowerOfTwo(int n) {
-    if(n == 0){         // condition to handle 0 as input (useful for workers default calculation with too big alpha factor and small dataset)  
+    if(n == 0){         // condition to handle 0 as input 
         return 1;
     }
     int power = 1;
@@ -533,6 +507,5 @@ int nearestPowerOfTwo(int n) {
     }
     return power / 2;
 }
-
 
 #endif
