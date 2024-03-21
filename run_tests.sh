@@ -212,15 +212,30 @@ mv diabetes ../diabetes
 
 cd ..
 
+
+# Get the username of the currently logged-in user
+username=$(whoami)
+
+# Concatenate the username with the suffix '_results'
+dir_name="${username}_results"
+
+# Check if the directory already exists
+if [ ! -d "./$dir_name" ]; then
+    # Create a directory with the concatenated name
+    mkdir -p "./$dir_name"
+    echo "Directory './$dir_name' created successfully."
+else
+    echo "Directory './$dir_name' already exists."
+fi
+
 # Move direcotires in result directory
-mkdir results
-mv nvprof_outputs results
-mv sw_hw_info results
-mv iris results
-mv diabetes results
-mv artificial_features results
-mv artificial_trainSizes results
-mv artificial_testSizes results
-mv artificial_k results
-mv artificial_alpha results
-mv artificial_blockDims results
+mv ./nvprof_outputs "./$dir_name/"
+mv ./sw_hw_info "./$dir_name/"
+mv ./iris "./$dir_name/"
+mv ./diabetes "./$dir_name/"
+mv ./artificial_features "./$dir_name/"
+mv ./artificial_trainSizes "./$dir_name/"
+mv ./artificial_testSizes "./$dir_name/"
+mv ./artificial_k "./$dir_name/"
+mv ./artificial_alpha "./$dir_name/"
+mv ./artificial_blockDims "./$dir_name/"
