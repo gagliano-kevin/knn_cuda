@@ -161,12 +161,12 @@ int main(int argc, char** argv) {
 
     // User defined workers value (if provided must be within the range [1, workers])
     if(argc > 5){
-    if(atoi(argv[5]) >= 1 && atoi(argv[5]) <= workers){
-        workers = atoi(argv[5]);
-    } else {
-        printf("Invalid workers value. Using default value: %d\n\n", workers);
+        if(atoi(argv[5]) >= 1 && atoi(argv[5]) <= workers){
+            workers = atoi(argv[5]);
+        } else {
+            printf("Invalid workers value. Using default value: %d\n\n", workers);
+        }
     }
-
     dim3 gridDim(testSize, 1, 1);   // each thread block is responsible for a row of the distances matrix
     dim3 blockDim(workers, 1, 1);
 

@@ -5,7 +5,6 @@ int main() {
 
     printf("Executing file: %s\n\n", __FILE__);
 
-    double exeTimes[10];
     int k = 10; 
     int metric = 1;                                                                                             // Euclidean distance
     int exp = 4;                                                                                                // Power for Minkowski distance (not used in this case)

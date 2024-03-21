@@ -64,8 +64,8 @@ int main(int argc, char** argv) {
     cudaMemcpy(d_trainIndexes, trainIndexes, trainSize * testSize * sizeof(int), cudaMemcpyHostToDevice);
     cudaMemcpy(d_trainLabels, trainLabels, trainSize * sizeof(int), cudaMemcpyHostToDevice);
     
-    cudaMemset(d_distances, 0, trainSize * testSize * sizeof(double));                                          // initialize distances matrix with 0
-    cudaMemSet(d_predictions, 0, testSize * sizeof(int));                                                       // initialize predictions with 0
+    cudaMemset(d_distances, 0, trainSize * testSize * sizeof(double));                                              // Initialize distances matrix to 0    
+    cudaMemset(d_predictions, 0, testSize * sizeof(int));                                                           // Initialize predictions array to 0
 
     // Set squared maximum dimensions as default for the blocks
     int dimx = (int)sqrt(getMaxThreadsPerBlock(device)); 

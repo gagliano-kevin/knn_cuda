@@ -211,3 +211,16 @@ echo -e "Test on diabetes dataset done\n\n\n"
 mv diabetes ../diabetes
 
 cd ..
+
+# Move direcotires in result directory
+mkdir results
+mv nvprof_outputs results
+mv sw_hw_info results
+mv iris results
+mv diabetes results
+mv artificial_features results
+mv artificial_trainSizes results
+mv artificial_testSizes results
+mv artificial_k results
+mv artificial_alpha results
+mv artificial_blockDims results
