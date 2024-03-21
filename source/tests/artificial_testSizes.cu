@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
     int testSize = 100;                                                                                         // Size of the test set
     int mean = 10;                                                                                              // Mean value for data generation
     int num_features = 10;                                                                                      // Number of features (and classes)
-    int num_classes = num_features;                                                                             // Number of classes
+    int num_classes = num_features;                                                                                     // Number of classes
     double exeTimes[10];                                                                                        // Execution times for each test set size 
 
     // Loop over different test set sizes
@@ -53,9 +53,8 @@ int main(int argc, char** argv) {
         cudaMemcpy(d_trainData, trainData, trainSize * num_features * sizeof(double), cudaMemcpyHostToDevice);
         cudaMemcpy(d_testData, testData, testSize * num_features * sizeof(double), cudaMemcpyHostToDevice);
         cudaMemset(d_distances, 0, trainSize * testSize * sizeof(double));                                      // Initialize distances matrix with 0
-        
     
-        // Set squared maximum dimensions as default for the block
+        // Set squared maximum dimensions as default for the blocks
         int dimx = (int)sqrt(getMaxThreadsPerBlock(device)); 
         int dimy = dimx;
         

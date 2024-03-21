@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
     // Distances computation
     double knnDistStart = cpuSecond();
     knnDistances<<< grid, block >>>(d_trainData, d_testData, d_distances, trainSize, testSize, metric, exp, num_features);
-    cudaDeviceSynchronize();        //forcing synchronous behavior
+    cudaDeviceSynchronize();                                                                                    //forcing synchronous behavior
     double knnDistElaps = cpuSecond() - knnDistStart;
     
 
@@ -136,22 +136,11 @@ int main(int argc, char** argv) {
     // KNN computation
     double knnStart = cpuSecond();
     knn<<< gridDim, blockDim, sharedMemorySize>>>(d_distances, trainSize, d_trainIndexes, k, d_predictions, d_trainLabels, index, alpha, beta, num_classes);
-    cudaDeviceSynchronize();                                                                                // Forcing synchronous behavior <-------------------------------------------------------------
+    cudaDeviceSynchronize();                                                                                // Forcing synchronous behavior 
     double knnElaps = cpuSecond() - knnStart;
 
-    cudaMemcpy(distances, d_distances, trainSize * testSize * sizeof(double), cudaMemcpyDeviceToHost);
-    cudaMemcpy(trainIndexes, d_trainIndexes, trainSize * testSize * sizeof(int), cudaMemcpyDeviceToHost);
-    cudaMemcpy(predictions, d_predictions, testSize * sizeof(int), cudaMemcpyDeviceToHost);
-
-    //printDataSet(trainData, trainLabels, trainSize, num_features);
-
-    //printDistances(distances, testSize, trainSize);
-
-    //printTrainIndexes(trainIndexes, testSize, trainSize);
-
-
-    //check device results
-    int errorCount = checkResult(testLabels, predictions, testSize);
+    cudaMemcpy(predictions, d_predictions, testSize * sizeof(int), cudaMemcpyDeviceToHost);                 // Copy predictions from device to host
+    int errorCount = checkResult(testLabels, predictions, testSize);                                        // Check the number of errors in the predictions
 
     // kernels dimensions
     unsigned int distDim[4] = {grid.x, grid.y, block.x, block.y};
@@ -159,7 +148,6 @@ int main(int argc, char** argv) {
 
     // Write results and device info to file
     writeResultsToFile(testLabels, predictions, errorCount, testSize, "par_results_artificial.txt", "par_results_artificial/", trainSize, num_features, k, metric, exp, distDim, predDim, workers, alpha, beta, knnDistElaps, knnElaps, sharedMemorySize, maxSharedMemory, sharedWorkers); 
-    //writeDeviceInfo("device_info.txt", device);
     writeAllInfoToFile("all_HW_info.txt", device);
 
     // Free device memory
@@ -170,7 +158,6 @@ int main(int argc, char** argv) {
     cudaFree(d_predictions);
     cudaFree(d_trainLabels);
 
-
     // Free host memory
     free(trainData);
     free(trainLabels);
@@ -180,10 +167,8 @@ int main(int argc, char** argv) {
     free(trainIndexes);
     free(predictions);
 
-
     //reset device
     cudaDeviceReset();
-
 
     return 0;
 }

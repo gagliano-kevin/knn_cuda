@@ -3,21 +3,22 @@
 
 int main() {
 
-    int k = 10; 
-    int metric = 1; // Metric distance
-    int exp = 4; // Exponent for Minkowski distance
+    printf("Executing file: %s\n\n", __FILE__);
 
-    double avgKnnElaps = 0.0;
+    int k = 10; 
+    int metric = 1;                                                                            // Euclidean distance
+    int exp = 4;                                                                               // Power for Minkowski distance (not used in this case)
+
+    double avgKnnElaps = 0.0;                                                                  // Average time for kNN execution
     int errorCount = 0;
     int trainSize = 0;
     int testSize = 0;
 
-    printf("Executing file: %s\n\n", __FILE__);
+    for(int i = 1; i <= 5; i++){                                                                // 5 iterations to calculate average time
 
-    for(int i = 1; i <= 5; i++){
-        Row *dataset;
+        Row *dataset;                                                                           // Pointer to Row struct                         
 
-        // TRAINING DATA
+        // Training data
         if (readCSV("../datasets/diabetes_training.csv", &dataset, &trainSize) != 1) {
             printf("Error reading CSV file.\n");
             return 1;
@@ -42,10 +43,8 @@ int main() {
 
         // Training data extraction
         extractData(dataset, trainData, trainLabels, trainSize);
-        //printDataSet(trainData, trainLabels, numRows);
-
         
-        // TEST DATA
+        // Test data
         if (readCSV("../datasets/diabetes_testing.csv", &dataset, &testSize) != 1) {
             printf("Error reading CSV file.\n");
             return 1;
@@ -70,40 +69,22 @@ int main() {
 
         // Test data extraction
         extractData(dataset, testData, testLabels, testSize);
-        //printDataSet(testData, testLabels, testSize);
 
-
+        // Host memory allocation
         double *distances = (double *)malloc(trainSize * testSize * sizeof(double));
         int *trainIndexes = (int *)malloc(trainSize * testSize * sizeof(int));
         int *predictions = (int *)malloc(testSize * sizeof(int));
 
+        createTrainIndexes(trainIndexes, testSize, trainSize);                                      // Create training set indexes for each test set element
 
-        createTrainIndexes(trainIndexes, testSize, trainSize);
-
-
+        // Knn execution
         double knnStart = cpuSecond();
         knn(trainData, testData, distances, trainSize, testSize, trainIndexes, k, metric, exp, predictions, trainLabels, FEATURES, CLASSES);
         double knnElaps = cpuSecond() - knnStart;
         avgKnnElaps += knnElaps;
 
-
-
-        //printDataSet(trainData, trainLabels, trainSize);
-
-        //printDistances(distances, testSize, trainSize);
-
-        //printTrainIndexes(trainIndexes, testSize, trainSize);
-
-
         //check device results
         errorCount = checkResult(testLabels, predictions, testSize);
-
-
-        // Write results and device info to file
-        //writeResultsToFile(testLabels, predictions, errorCount, testSize, "seq_results_diabetes.txt", "seq_results_diabetes/", trainSize, FEATURES, k, metric, exp, knnElaps);
-        //const char *filename = "hardware_spec.txt";
-        //writeAllInfoToFile(filename);
-
 
         // Free host memory
         free(dataset);
@@ -115,11 +96,10 @@ int main() {
         free(trainIndexes);
         free(predictions);
     }
-    avgKnnElaps /= 5;
-
-    appendResultsToFile(errorCount, testSize, "diabetes_c.txt", "diabetes/", trainSize, FEATURES, k, metric, exp, avgKnnElaps);
-    exeTimeToFile("diabetes_csv.txt", "diabetes/", &avgKnnElaps, 1);
-
+    avgKnnElaps /= 5;                                                                               // Calculate average execution time
+    // Write results file
+    appendResultsToFile(errorCount, testSize, "diabetes_c.txt", "diabetes/", trainSize, FEATURES, k, metric, exp, avgKnnElaps); 
+    exeTimeToFile("diabetes_csv.txt", "diabetes/", &avgKnnElaps, 1);                                // Write execution time to csv file
 
     return 0;
 }
