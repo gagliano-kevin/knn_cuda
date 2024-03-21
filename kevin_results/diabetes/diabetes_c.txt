@@ -1,0 +1,16 @@
+knn execution information:
+knn execution time 4.274396 sec
+
+Data information:
+Training data size: 2460
+Test data size: 308
+Number of features: 8
+
+KNN Parameters:
+k: 10
+Distance Metric: Euclidean
+
+Number of prediction errors: 95
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
