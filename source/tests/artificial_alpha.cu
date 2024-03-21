@@ -11,7 +11,7 @@ int main(int argc, char** argv) {
 
     printf("Executing file: %s\n\n", __FILE__);
 
-    int k = 5; 
+    int k = 10; 
     int metric = 1;                                                                                             // Euclidean distance
     int exp = 4;                                                                                                // Power for Minkowski distance (not used in this case)
     int trainSize = 1000;                                                                                       // Size of the training set
@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
     int alpha = 2;                                                                                              // Default alpha value (regulates the number of threads in a block for the knn kernel)
     double exeTimes[7];                                                                                         // Execution times array for different alpha values
 
-    // Loop for different alpha values (from 2 to 8)
+    // Loop for different alpha values (from 2 to 8 if no argv[3] is provided)
     for(alpha = 2; alpha <= 8; alpha += 1){
 
         // Pointers to host memory for data and labels
