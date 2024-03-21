@@ -13,24 +13,21 @@ int main(int argc, char** argv) {
     printf("Executing file: %s\n\n", __FILE__);
 
     int k = 5; 
-    int metric = 1; // Euclidean distance
-    int exp = 4; // Power for Minkowski distance (not used in this case)
-    int trainSize = 1000; // Size of the dataset
-    int testSize = 100; // Size of the dataset
-    int mean = 10; // Mean value for class component
-    int num_features = 10; // Number of features (and classes)
-    int num_classes = num_features; // Number of classes
+    int metric = 1;                                                                             // Euclidean distance
+    int exp = 4;                                                                                // Power for Minkowski distance (not used in this case)
+    int trainSize = 1000;                                                                       // Size of the training set
+    int testSize = 100;                                                                         // Size of the test set
+    int mean = 10;                                                                              // Mean value for data generation
+    int num_features = 10;                                                                      // Number of features (and classes)
+    int num_classes = num_features;                                                             // Number of classes
+    int alpha = 2;                                                                              // Default alpha value (regulates the number of threads in a block for the knn kernel)
+    int dimx = 2;                                                                               // Initial block dimension
+    double exeTimes[5];                                                                         // Execution times for each block dimension
 
-    int alpha = 2;
-
-    // Set growing squared dimensions for block in knnDistances kernel
-    int dimx = 2;
-
-    double exeTimes[5];
-
+    // Loop over different block dimensions (2, 4, 8, 16, 32)
     for(dimx = 2; dimx <= 32; dimx *= 2){
 
-        int dimy = dimx;
+        int dimy = dimx;                                                                        // Square blocks                      
 
         // pointer to memory for data and labels
         double *trainData;
@@ -38,17 +35,13 @@ int main(int argc, char** argv) {
         double *testData;
         int *testLabels;
 
-    
-        // Generate training set
-        generateData(trainSize, num_features, &trainData, &trainLabels, mean);
-        // Generate test set
-        generateData(testSize, num_features, &testData, &testLabels, mean);
+        generateData(trainSize, num_features, &trainData, &trainLabels, mean);                  // Generate training set
+        generateData(testSize, num_features, &testData, &testLabels, mean);                     // Generate test set
 
         // Host memory allocation
         double *distances = (double *)malloc(trainSize * testSize * sizeof(double));
         int *trainIndexes = (int *)malloc(trainSize * testSize * sizeof(int));
         int *predictions = (int *)malloc(testSize * sizeof(int));
-
 
         createTrainIndexes(trainIndexes, testSize, trainSize);
 
