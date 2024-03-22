@@ -252,9 +252,9 @@ void appendRunStatsToFile(const char *filename, const char *dirname, double* exe
         printf("Error opening file!\n");
         return;
     }
-    fprintf(file, "######################################################\n");
-    fprintf(file, "                Execution informations\n");
-    fprintf(file, "######################################################\n\n");
+    fprintf(file, "############################################################################################################\n");
+    fprintf(file, "                                         Execution informations\n");
+    fprintf(file, "############################################################################################################\n\n");
     fprintf(file, "Execution times over %d runs:\t", numRuns);
     for(int i = 0; i < numRuns; i++){
         fprintf(file, "%f\t", exeTimes[i]);
