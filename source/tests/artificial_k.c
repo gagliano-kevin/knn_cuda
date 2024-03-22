@@ -19,6 +19,8 @@ int main() {
     // Loop over different k values
     for(k = 5; k <= 50; k += 5){
 
+        double runTimes[5] = {0.0, 0.0, 0.0, 0.0, 0.0};                                                             // Execution times array for the same k value in multiple runs
+
         int errorCount = 0;
         double avgKnnElaps = 0.0;
 
@@ -44,7 +46,7 @@ int main() {
             double knnStart = cpuSecond();
             knn(trainData, testData, distances, trainSize, testSize, trainIndexes, k, metric, exp, predictions, trainLabels, num_features, num_classes);
             double knnElaps = cpuSecond() - knnStart;
-
+            runTimes[i-1] = knnElaps;
             avgKnnElaps += knnElaps;
 
             errorCount = checkResult(testLabels, predictions, testSize);                                             // Check the number of errors in the predictions
@@ -63,6 +65,7 @@ int main() {
         exeTimes[(k/5)-1] = avgKnnElaps;                                                                            // Store the execution time for the current k value
 
         // Print results to file
+        appendRunStatsToFile("artificial_k_c.txt", "artificial_k/", runTimes, 5);
         appendResultsToFile(errorCount, testSize, "artificial_k_c.txt", "artificial_k/", trainSize, num_features, k, metric, exp, avgKnnElaps);
     }
 

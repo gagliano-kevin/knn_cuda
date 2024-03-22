@@ -18,6 +18,8 @@ int main() {
     // Loop over different test set sizes
     for(testSize = 100; testSize <= 1000; testSize += 100){
 
+        double runTimes[5] = {0.0, 0.0, 0.0, 0.0, 0.0};                                                             // Execution times array for the same test set size in multiple runs
+
         int errorCount = 0;
         double avgKnnElaps = 0.0;
 
@@ -42,7 +44,7 @@ int main() {
             double knnStart = cpuSecond();
             knn(trainData, testData, distances, trainSize, testSize, trainIndexes, k, metric, exp, predictions, trainLabels, num_features, num_classes);
             double knnElaps = cpuSecond() - knnStart;
-
+            runTimes[i-1] = knnElaps;
             avgKnnElaps += knnElaps;
 
             errorCount = checkResult(testLabels, predictions, testSize);                                             // Check the number of errors in the predictions
@@ -61,6 +63,7 @@ int main() {
         exeTimes[(testSize/100)-1] = avgKnnElaps;                                                                   // Store the execution time for the current test set size
 
         // Print results to file
+        appendRunStatsToFile("artificial_testSizes_c.txt", "artificial_testSizes/", runTimes, 5);
         appendResultsToFile(errorCount, testSize, "artificial_testSizes_c.txt", "artificial_testSizes/", trainSize, num_features, k, metric, exp, avgKnnElaps);
     }
 

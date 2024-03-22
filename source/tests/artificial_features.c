@@ -17,7 +17,9 @@ int main() {
     // Loop over diffeerent number of features
     for(num_features = 10; num_features <= 100; num_features += 10){
 
-        int num_classes = num_features;                                                                              // Number of classes
+        double runTimes[5] = {0.0, 0.0, 0.0, 0.0, 0.0};                                                             // Execution times array for the same number of features in multiple runs
+
+        int num_classes = num_features;                                                                             // Number of classes
         int errorCount = 0;
 
         double avgKnnElaps = 0.0;                                                                                   // Average elapsed time for knn computation
@@ -42,7 +44,7 @@ int main() {
             double knnStart = cpuSecond();
             knn(trainData, testData, distances, trainSize, testSize, trainIndexes, k, metric, exp, predictions, trainLabels, num_features, num_classes);
             double knnElaps = cpuSecond() - knnStart;
-
+            runTimes[i-1] = knnElaps;
             avgKnnElaps += knnElaps;
 
             errorCount = checkResult(testLabels, predictions, testSize);                                            // Check the number of errors in the predictions
@@ -61,6 +63,7 @@ int main() {
         exeTimes[(num_features/10)-1] = avgKnnElaps;                                                                // Store the execution time for the current number of features
 
         // Print results to file
+        appendRunStatsToFile("artificial_features_c.txt", "artificial_features/", runTimes, 5);
         appendResultsToFile(errorCount, testSize, "artificial_features_c.txt", "artificial_features/", trainSize, num_features, k, metric, exp, avgKnnElaps);
     }
 
