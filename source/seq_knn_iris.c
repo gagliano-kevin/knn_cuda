@@ -14,6 +14,7 @@ int main() {
     int errorCount = 0;
     int trainSize = 0;
     int testSize = 0;
+    double exeTimes[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
 
     for(int i = 1; i <= 5; i++){                                                                // 5 iterations to calculate average time
 
@@ -53,6 +54,7 @@ int main() {
         double knnStart = cpuSecond();
         knn(trainData, testData, distances, trainSize, testSize, trainIndexes, k, metric, exp, predictions, trainLabels, FEATURES, CLASSES);
         double knnElaps = cpuSecond() - knnStart;
+        exeTimes[i-1] = knnElaps;
         avgKnnElaps += knnElaps;
 
         //check device results
@@ -70,6 +72,7 @@ int main() {
     }
     avgKnnElaps /= 5;                                                                           // Calculate average execution time
     // Write results to file
+    appendRunStatsToFile("iris_c.txt", "iris/", exeTimes, 5);
     appendResultsToFile(errorCount, testSize, "iris_c.txt", "iris/", trainSize, FEATURES, k, metric, exp, avgKnnElaps);
     exeTimeToFile("iris_csv.txt", "iris/", &avgKnnElaps, 1);                                    // Write execution time to csv file
 

@@ -15,6 +15,7 @@ int main(int argc, char** argv) {
     int k = 10; 
     int metric = 1;                                                                                             // Euclidean distance
     int exp = 4;                                                                                                // Power for Minkowski distance (not used in this case)
+    double exeTimes[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
 
     IrisData *iris_data;
     int trainSize;
@@ -93,7 +94,8 @@ int main(int argc, char** argv) {
         double knnDistStart = cpuSecond();
         knnDistances<<< grid, block >>>(d_trainData, d_testData, d_distances, trainSize, testSize, metric, exp, FEATURES);
         cudaDeviceSynchronize();                                                                                // Forcing synchronous behavior
-        avgKnnDistElaps += (cpuSecond() - knnDistStart);
+        exeTimes[i-1] = (cpuSecond() - knnDistStart);
+        avgKnnDistElaps += exeTimes[i-1];
     }
     avgKnnDistElaps /= 5;
 
@@ -149,7 +151,9 @@ int main(int argc, char** argv) {
         double knnStart = cpuSecond();
         knn<<< gridDim, blockDim, sharedMemorySize>>>(d_distances, trainSize, d_trainIndexes, k, d_predictions, d_trainLabels, index, alpha, beta, CLASSES);
         cudaDeviceSynchronize();                                                                            // Forcing synchronous behavior
-        avgKnnElaps += (cpuSecond() - knnStart);
+        double knnElaps = (cpuSecond() - knnStart);
+        exeTimes[i-1] += knnElaps;
+        avgKnnElaps += knnElaps;
     }
     avgKnnElaps /= 5;
 
@@ -163,6 +167,7 @@ int main(int argc, char** argv) {
     unsigned int predDim[4] = {gridDim.x, gridDim.y, blockDim.x, blockDim.y};
 
     // Print results to file
+    appendRunStatsToFile("iris_cu.txt", "iris/", exeTimes, 5);
     appendResultsToFile(errorCount, testSize, "iris_cu.txt", "iris/", trainSize, FEATURES, k, metric, exp, distDim, predDim, workers, alpha, beta, avgKnnDistElaps, avgKnnElaps, sharedMemorySize, maxSharedMemory, sharedWorkers);
 
     // Free device memory

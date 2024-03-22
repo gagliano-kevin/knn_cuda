@@ -25,6 +25,8 @@ int main(int argc, char** argv) {
     // Loop for different alpha values (from 2 to 8 if no argv[3] is provided)
     for(alpha = 2; alpha <= 8; alpha += 1){
 
+        double runTimes[5] = {0.0, 0.0, 0.0, 0.0, 0.0};                                                         // Execution times array for the same alpha value in multiple runs
+
         // Pointers to host memory for data and labels
         double *trainData;
         int *trainLabels;
@@ -82,7 +84,8 @@ int main(int argc, char** argv) {
             knnDistances<<< grid, block >>>(d_trainData, d_testData, d_distances, trainSize, testSize, metric, exp, num_features);
             cudaDeviceSynchronize();                                                                            //Forcing synchronous behavior
             double knnDistElaps = cpuSecond() - knnDistStart;
-            avgKnnDistElaps += knnDistElaps;
+            runTimes[i-1] = (cpuSecond() - knnDistStart);
+            avgKnnDistElaps += runTimes[i-1];
         }
         avgKnnDistElaps /= 5;
 
@@ -149,7 +152,8 @@ int main(int argc, char** argv) {
             double knnStart = cpuSecond();
             knn<<< gridDim, blockDim, sharedMemorySize>>>(d_distances, trainSize, d_trainIndexes, k, d_predictions, d_trainLabels, index, alpha, beta, num_classes);
             cudaDeviceSynchronize();                                                                            // Forcing synchronous behavior
-            double knnElaps = cpuSecond() - knnStart;
+            double knnElaps = (cpuSecond() - knnStart);
+            runTimes[i-1] += knnElaps;
             avgKnnElaps += knnElaps;
         }
         avgKnnElaps /= 5;
@@ -162,6 +166,7 @@ int main(int argc, char** argv) {
         unsigned int predDim[4] = {gridDim.x, gridDim.y, blockDim.x, blockDim.y};
 
         // Print results to file
+        appendRunStatsToFile("artificial_alpha_cu.txt", "artificial_alpha/" exeTimes, 5);
         appendResultsToFile(errorCount, testSize, "artificial_alpha_cu.txt", "artificial_alpha/", trainSize, num_features, k, metric, exp, distDim, predDim, workers, alpha, beta, avgKnnDistElaps, avgKnnElaps, sharedMemorySize, maxSharedMemory, sharedWorkers);
 
         exeTimes[alpha - 2] = avgKnnElaps + avgKnnDistElaps;                                                     // Store the execution time for the current alpha value
