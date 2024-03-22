@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <math.h>
 
 #define BUFFER_SIZE 256
 
@@ -215,6 +216,55 @@ void exeTimeToFile(const char *filename, const char *dirname, double* exeTimes, 
         fprintf(file, "%f , ", exeTimes[i]);
     }
     fprintf(file, "\n");
+    fclose(file);
+}
+
+
+// Mean value 
+double computeMean(double *arr, int n) {
+    double sum = 0;
+    for (int i = 0; i < n; i++) {
+        sum += arr[i];
+    }
+    return sum / n;
+}
+
+
+// Variance  -->  E[ (X-E[x])' (X-E[x]) ] 
+double computeVariance(double *arr, int n, double meanValue) {
+    double mean = meanValue;
+    double sumSquaredDiff = 0;
+    for (int i = 0; i < n; i++) {
+        double diff = arr[i] - mean;
+        sumSquaredDiff += diff * diff;
+    }
+    return sumSquaredDiff / n;
+}
+
+
+// Append execution times and statistics to a file
+void appendRunStatsToFile(const char *filename, const char *dirname, double* exeTimes, int numRuns){
+    createDirectory(dirname); 
+    char path[256];                                                                                // Assuming max path length of 256 characters
+    snprintf(path, sizeof(path), "%s%s", dirname, filename);                                       // Concatenate the directory and filename
+    FILE *file = fopen(path, "a");                                                                 // Open the file in append mode
+    if (file == NULL) {
+        printf("Error opening file!\n");
+        return;
+    }
+    fprintf(file, "######################################################\n");
+    fprintf(file, "                Execution informations\n");
+    fprintf(file, "######################################################\n\n");
+    fprintf(file, "Execution times over %d runs:\t", numRuns);
+    for(int i = 0; i < numRuns; i++){
+        fprintf(file, "%f\t", exeTimes[i]);
+    }
+    fprintf(file, "\n");
+    double avgExeTime = computeMean(exeTimes, numRuns);
+    fprintf(file, "Average execution time: %f\n", avgExeTime);
+    double variance = computeVariance(exeTimes, numRuns, avgExeTime);
+    fprintf(file, "Variance of execution times: %f\n\n", variance);
+
     fclose(file);
 }
 

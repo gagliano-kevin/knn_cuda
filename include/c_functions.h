@@ -90,7 +90,7 @@ void appendResultsToFile(int errorCount, int testSize, const char *filename, con
         return;
     }
     fprintf(file, "knn execution information:\n");
-    fprintf(file, "knn execution time %f sec\n", exeTime);
+    fprintf(file, "knn execution time: %f sec\n", exeTime);
     fprintf(file, "\nData information:\n");
     fprintf(file, "Training data size: %d\n", trainSize);
     fprintf(file, "Test data size: %d\n", testSize);
@@ -123,7 +123,7 @@ void writeResultsToFile(int * trainLabels, int *results, int errorCount, int tes
         return;
     }
     fprintf(file, "knn execution information:\n");
-    fprintf(file, "knn execution time %f sec\n", exeTime);
+    fprintf(file, "knn execution time: %f sec\n", exeTime);
     fprintf(file, "\nData information:\n");
     fprintf(file, "Training data size: %d\n", trainSize);
     fprintf(file, "Test data size: %d\n", testSize);

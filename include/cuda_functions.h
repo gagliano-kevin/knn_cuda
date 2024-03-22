@@ -204,8 +204,9 @@ void appendResultsToFile(int errorCount, int testSize, const char *filename, con
     fprintf(file, "Factor alpha: %d\n", alpha);
     fprintf(file, "Factor beta: %d\n", beta);
     fprintf(file, "Shared memory used: %d bytes \t<---->\t Max shared memory per block: %d bytes\n", sharedMemory, maxSharedMemory);
-    fprintf(file, "knnDistances execution time %f sec\n", kernelTime1);
-    fprintf(file, "knn execution time %f sec\n", kernelTime2);
+    fprintf(file, "knnDistances execution time: %f sec\n", kernelTime1);
+    fprintf(file, "knn execution time: %f sec\n", kernelTime2);
+    fprintf(file, "Sum of kernel execution times: %f sec\n", kernelTime1 + kernelTime2);
     fprintf(file, "\nData information:\n");
     fprintf(file, "Training data size: %d\n", trainSize);
     fprintf(file, "Test data size: %d\n", testSize);
@@ -247,8 +248,8 @@ void writeResultsToFile(int * trainLabels, int *results, int errorCount, int tes
     fprintf(file, "Factor alpha: %d\n", alpha);
     fprintf(file, "Factor beta: %d\n", beta);
     fprintf(file, "Shared memory used: %d bytes \t<---->\t Max shared memory per block: %d bytes\n", sharedMemory, maxSharedMemory);
-    fprintf(file, "knnDistances execution time %f sec\n", kernelTime1);
-    fprintf(file, "knn execution time %f sec\n", kernelTime2);
+    fprintf(file, "knnDistances execution time: %f sec\n", kernelTime1);
+    fprintf(file, "knn execution time: %f sec\n", kernelTime2);
     fprintf(file, "\nData information:\n");
     fprintf(file, "Training data size: %d\n", trainSize);
     fprintf(file, "Test data size: %d\n", testSize);
