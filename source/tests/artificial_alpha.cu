@@ -166,7 +166,7 @@ int main(int argc, char** argv) {
         unsigned int predDim[4] = {gridDim.x, gridDim.y, blockDim.x, blockDim.y};
 
         // Print results to file
-        appendRunStatsToFile("artificial_alpha_cu.txt", "artificial_alpha/" exeTimes, 5);
+        appendRunStatsToFile("artificial_alpha_cu.txt", "artificial_alpha/" runTimes, 5);
         appendResultsToFile(errorCount, testSize, "artificial_alpha_cu.txt", "artificial_alpha/", trainSize, num_features, k, metric, exp, distDim, predDim, workers, alpha, beta, avgKnnDistElaps, avgKnnElaps, sharedMemorySize, maxSharedMemory, sharedWorkers);
 
         exeTimes[alpha - 2] = avgKnnElaps + avgKnnDistElaps;                                                     // Store the execution time for the current alpha value
