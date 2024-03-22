@@ -1,0 +1,240 @@
+############################################################################################################
+                                         Execution informations
+############################################################################################################
+
+Execution times over 5 runs:	0.260235	0.223579	0.223329	0.221360	0.220379	
+Average execution time: 0.229776
+Variance of execution times: 0.000233
+
+knn execution information:
+knn execution time: 0.229776 sec
+
+Data information:
+Training data size: 1000
+Test data size: 100
+Number of features: 10
+
+KNN Parameters:
+k: 5
+Distance Metric: Euclidean
+
+Number of prediction errors: 0
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+############################################################################################################
+                                         Execution informations
+############################################################################################################
+
+Execution times over 5 runs:	0.220881	0.217920	0.227276	0.224527	0.218000	
+Average execution time: 0.221721
+Variance of execution times: 0.000014
+
+knn execution information:
+knn execution time: 0.221721 sec
+
+Data information:
+Training data size: 1000
+Test data size: 100
+Number of features: 10
+
+KNN Parameters:
+k: 10
+Distance Metric: Euclidean
+
+Number of prediction errors: 0
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+############################################################################################################
+                                         Execution informations
+############################################################################################################
+
+Execution times over 5 runs:	0.218818	0.218792	0.218094	0.220041	0.221273	
+Average execution time: 0.219404
+Variance of execution times: 0.000001
+
+knn execution information:
+knn execution time: 0.219404 sec
+
+Data information:
+Training data size: 1000
+Test data size: 100
+Number of features: 10
+
+KNN Parameters:
+k: 15
+Distance Metric: Euclidean
+
+Number of prediction errors: 0
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+############################################################################################################
+                                         Execution informations
+############################################################################################################
+
+Execution times over 5 runs:	0.226097	0.232496	0.226905	0.223705	0.218398	
+Average execution time: 0.225520
+Variance of execution times: 0.000021
+
+knn execution information:
+knn execution time: 0.225520 sec
+
+Data information:
+Training data size: 1000
+Test data size: 100
+Number of features: 10
+
+KNN Parameters:
+k: 20
+Distance Metric: Euclidean
+
+Number of prediction errors: 0
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+############################################################################################################
+                                         Execution informations
+############################################################################################################
+
+Execution times over 5 runs:	0.221158	0.220543	0.220464	0.219193	0.219783	
+Average execution time: 0.220228
+Variance of execution times: 0.000000
+
+knn execution information:
+knn execution time: 0.220228 sec
+
+Data information:
+Training data size: 1000
+Test data size: 100
+Number of features: 10
+
+KNN Parameters:
+k: 25
+Distance Metric: Euclidean
+
+Number of prediction errors: 0
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+############################################################################################################
+                                         Execution informations
+############################################################################################################
+
+Execution times over 5 runs:	0.220444	0.223370	0.219886	0.220790	0.220502	
+Average execution time: 0.220998
+Variance of execution times: 0.000001
+
+knn execution information:
+knn execution time: 0.220998 sec
+
+Data information:
+Training data size: 1000
+Test data size: 100
+Number of features: 10
+
+KNN Parameters:
+k: 30
+Distance Metric: Euclidean
+
+Number of prediction errors: 0
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+############################################################################################################
+                                         Execution informations
+############################################################################################################
+
+Execution times over 5 runs:	0.219700	0.222754	0.221988	0.223699	0.225305	
+Average execution time: 0.222689
+Variance of execution times: 0.000003
+
+knn execution information:
+knn execution time: 0.222689 sec
+
+Data information:
+Training data size: 1000
+Test data size: 100
+Number of features: 10
+
+KNN Parameters:
+k: 35
+Distance Metric: Euclidean
+
+Number of prediction errors: 0
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+############################################################################################################
+                                         Execution informations
+############################################################################################################
+
+Execution times over 5 runs:	0.226147	0.223871	0.225196	0.229178	0.227472	
+Average execution time: 0.226373
+Variance of execution times: 0.000003
+
+knn execution information:
+knn execution time: 0.226373 sec
+
+Data information:
+Training data size: 1000
+Test data size: 100
+Number of features: 10
+
+KNN Parameters:
+k: 40
+Distance Metric: Euclidean
+
+Number of prediction errors: 0
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+############################################################################################################
+                                         Execution informations
+############################################################################################################
+
+Execution times over 5 runs:	0.227375	0.225698	0.225353	0.225374	0.225710	
+Average execution time: 0.225902
+Variance of execution times: 0.000001
+
+knn execution information:
+knn execution time: 0.225902 sec
+
+Data information:
+Training data size: 1000
+Test data size: 100
+Number of features: 10
+
+KNN Parameters:
+k: 45
+Distance Metric: Euclidean
+
+Number of prediction errors: 0
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+############################################################################################################
+                                         Execution informations
+############################################################################################################
+
+Execution times over 5 runs:	0.225660	0.221477	0.222019	0.224208	0.222115	
+Average execution time: 0.223096
+Variance of execution times: 0.000003
+
+knn execution information:
+knn execution time: 0.223096 sec
+
+Data information:
+Training data size: 1000
+Test data size: 100
+Number of features: 10
+
+KNN Parameters:
+k: 50
+Distance Metric: Euclidean
+
+Number of prediction errors: 0
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+

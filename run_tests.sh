@@ -1,14 +1,45 @@
 #!/bin/bash
 
+echo -e "\n************************************************ KNN ALGORITHM TESTS ************************************************\n"
+
+echo -e "Checking for required tools and libraries...\n"
+
+# Check for nvprof
+if ! command -v nvprof &> /dev/null
+then
+    echo -e "nvprof could not be found\n"
+    echo -e "Please make sure you have CUDA installed and nvprof is in your PATH\n"
+    exit
+fi
+echo -e "--> nvprof found\n"
+
+# Check for nvcc
+if ! command -v nvcc &> /dev/null
+then
+    echo -e "nvcc could not be found\n"
+    echo -e "Please make sure you have CUDA installed and nvcc is in your PATH\n"
+    exit
+fi
+echo -e "--> nvcc found\n"
+
+# Check for gcc
+if ! command -v gcc &> /dev/null
+then
+    echo -e "gcc could not be found\n"
+    echo -e "Please make sure you have gcc installed and it is in your PATH\n"
+    exit
+fi
+echo -e "--> gcc found\n\n"
+
 # Create directory to store nvprof outputs
 mkdir nvprof_outputs
 
-echo -e "\nRunning tests on KNN algorithm\n\n"
+echo -e "Running tests on KNN algorithm...\n\n"
 
 
 # --------------------- TEST ON ARTIFICIAL FEATURES --------------------- #
 
-echo -e "----------------------------- TEST ON ARTIFICIAL FEATURES -----------------------------\n"
+echo -e "-------------------------------------------- TEST ON ARTIFICIAL FEATURES --------------------------------------------\n"
 
 echo -e "Compiling artificial_features.cu\n"
 
@@ -38,7 +69,7 @@ echo -e "Test on artificial data with growing features DONE\n\n\n"
 
 # ----------------------------- TEST ON TRAINING SET SIZES ----------------------------- #
 
-echo -e "----------------------------- TEST ON TRAINING SET SIZES -----------------------------\n"
+echo -e "-------------------------------------------- TEST ON TRAINING SET SIZES --------------------------------------------\n"
 
 echo -e "Compiling artificial_trainSizes.cu\n"
 
@@ -67,9 +98,9 @@ echo -e "Test on artificial data with growing trainig set sizes DONE\n\n\n"
 
 
 
-# ----------------------------- TEST ON TEST SET SIZES ----------------------------- #
+# ---------------------------------- TEST ON TEST SET SIZES ---------------------------------- #
 
-echo -e "------------------------------- TEST ON TEST SET SIZES -------------------------------\n"
+echo -e "---------------------------------------------- TEST ON TEST SET SIZES ----------------------------------------------\n"
 
 echo -e "Compiling artificial_testSizes.cu\n"
 
@@ -97,9 +128,9 @@ rm par_artificial_testSizes seq_artificial_testSizes
 echo -e "Test on artificial data with growing test set sizes DONE\n\n\n"
 
 
-# ----------------------------- TEST ON K PARAMETER ----------------------------- #
+# ---------------------------------- TEST ON K PARAMETER ---------------------------------- #
 
-echo -e "--------------------------------- TEST ON K PARAMETER ---------------------------------\n"
+echo -e "------------------------------------------------ TEST ON K PARAMETER ------------------------------------------------\n"
 
 echo -e "Compiling artificial_k.cu\n"
 
@@ -127,9 +158,9 @@ rm par_artificial_k seq_artificial_k
 echo -e "Test on artificial data with growing k parameter DONE\n\n\n"
 
 
-# ----------------------------- TEST ON ALPHA PARAMETER ----------------------------- #
+# --------------------------------------- TEST ON ALPHA PARAMETER --------------------------------------- #
 
-echo -e "------------------------------- TEST ON ALPHA PARAMETER -------------------------------\n"
+echo -e "---------------------------------------------- TEST ON ALPHA PARAMETER ----------------------------------------------\n"
 
 echo -e "Compiling artificial_alpha.cu\n"
 
@@ -149,7 +180,7 @@ echo -e "Test on artificial data with growing alpha parameter DONE\n\n\n"
 
 # ----------------------------- TEST ON BLOCKDIM KNN_DISTANCES PARAMETERS ----------------------------- #
 
-echo -e "---------------------- TEST ON BLOCKDIM KNN_DISTANCES PARAMETERS ----------------------\n"
+echo -e "------------------------------------- TEST ON BLOCKDIM KNN_DISTANCES PARAMETERS -------------------------------------\n"
 
 echo -e "Compiling artificial_blockDims.cu\n"
 
@@ -167,9 +198,9 @@ rm par_artificial_blockDims
 echo -e "Test on artificial data with growing block dimensions DONE\n\n\n"
 
 
-# ----------------------------- TEST ON IRIS DATASET ----------------------------- #
+# ---------------------------------- TEST ON IRIS DATASET ---------------------------------- #
 
-echo -e "--------------------------------- TEST ON IRIS DATASET --------------------------------\n"
+echo -e "------------------------------------------------ TEST ON IRIS DATASET -----------------------------------------------\n"
 
 cd source
 
@@ -203,9 +234,9 @@ mv iris ../iris
 cd ..
 
 
-# ----------------------------- TEST ON DIABETES DATASET ----------------------------- #
+# ---------------------------------- TEST ON DIABETES DATASET ---------------------------------- #
 
-echo -e "------------------------------- TEST ON DIABETES DATASET ------------------------------\n"
+echo -e "---------------------------------------------- TEST ON DIABETES DATASET ---------------------------------------------\n"
 
 cd source
 
@@ -245,14 +276,22 @@ username=$(whoami)
 # Concatenate the username with the suffix '_results'
 dir_name="${username}_results"
 
+echo -e "Creating directory ./$dir_name to store all the results\n\n"
+
 # Check if the directory already exists
 if [ ! -d "./$dir_name" ]; then
     # Create a directory with the concatenated name
     mkdir -p "./$dir_name"
-    echo "Directory './$dir_name' created successfully."
+    echo -e "Directory './$dir_name' created successfully\n\n"
 else
-    echo "Directory './$dir_name' already exists."
+    echo -e "Directory './$dir_name' already exists\n\n"
+    # In case the directory already exists, add the current date and time to the directory name
+    echo -e "Adding current date and time to the directory name\n\n"
+    dir_name="${username}_results_$(date +'%Y-%m-%d_%H-%M-%S')"
+    mkdir -p "./$dir_name"
+    echo -e "Directory './$dir_name' created successfully\n\n"
 fi
+
 
 # Move direcotires in result directory
 mv ./nvprof_outputs "./$dir_name/"
@@ -265,3 +304,5 @@ mv ./artificial_testSizes "./$dir_name/"
 mv ./artificial_k "./$dir_name/"
 mv ./artificial_alpha "./$dir_name/"
 mv ./artificial_blockDims "./$dir_name/"
+
+echo -e "All tests done. Results stored in directory ./$dir_name\n"
