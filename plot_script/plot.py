@@ -33,9 +33,7 @@ plt.grid(True, which="both", linestyle='--')
 # Set x-axis tick locations
 plt.xticks(range(1, len(gpu_times)+1))
 
-# Save the plot
-#plt.savefig('execution_times_plot1.png')
-# Save the plot in a higher resolution and in a different format (e.g., PNG or PDF)
+# Save the plot in a higher resolution and in a different format 
 plt.savefig('execution_times_plot1.png', dpi=300, bbox_inches='tight', format='png')
 
 # Show plot

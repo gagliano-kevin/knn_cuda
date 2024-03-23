@@ -57,9 +57,8 @@ ticks = [tick for tick in ticks if min_time <= tick <= max_time]
 plt.yticks(ticks)
 '''
 
-# Save the plot
-#plt.savefig('execution_times_plot2.png')
-# Save the plot in a higher resolution and in a different format (e.g., PNG or PDF)
+
+# Save the plot in a higher resolution and in a different format 
 plt.savefig('execution_times_plot2.png', dpi=300, bbox_inches='tight', format='png')
 
 # Show plot
