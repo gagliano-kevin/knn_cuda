@@ -1,7 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# Sample data (replace this with parsing of nvprof output)
+# Sample data 
 # Format: (GPU, Kernel/API, Time)
 data = [
     (0, 'kernel1', 40),
