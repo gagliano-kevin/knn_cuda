@@ -9,9 +9,11 @@ if ! command -v nvprof &> /dev/null
 then
     echo -e "nvprof could not be found\n"
     echo -e "Please make sure you have CUDA installed and nvprof is in your PATH\n"
-    exit
+    echo -e "Continuing without profiling\n"
+else
+    echo -e "--> nvprof found\n"
 fi
-echo -e "--> nvprof found\n"
+
 
 # Check for nvcc
 if ! command -v nvcc &> /dev/null
