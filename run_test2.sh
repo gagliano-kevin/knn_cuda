@@ -5,19 +5,20 @@ echo -e "\n************************************************ KNN ALGORITHM TESTS 
 echo -e "Checking for required tools and libraries...\n"
 
 # Check for nvprof
-if ! command -v nvprof &> /dev/null
-then
+if command -v nvprof &> /dev/null; then
+    nvprof_available=true
+    echo -e "--> nvprof found\n"
+    # Create directory to store nvprof outputs
+    mkdir -p nvprof_outputs
+else
+    nvprof_available=false
     echo -e "nvprof could not be found\n"
     echo -e "Please make sure you have CUDA installed and nvprof is in your PATH\n"
     echo -e "Continuing without profiling\n"
-else
-    echo -e "--> nvprof found\n"
 fi
 
-
 # Check for nvcc
-if ! command -v nvcc &> /dev/null
-then
+if ! command -v nvcc &> /dev/null; then
     echo -e "nvcc could not be found\n"
     echo -e "Please make sure you have CUDA installed and nvcc is in your PATH\n"
     exit
@@ -25,19 +26,15 @@ fi
 echo -e "--> nvcc found\n"
 
 # Check for gcc
-if ! command -v gcc &> /dev/null
-then
+if ! command -v gcc &> /dev/null; then
     echo -e "gcc could not be found\n"
     echo -e "Please make sure you have gcc installed and it is in your PATH\n"
     exit
 fi
 echo -e "--> gcc found\n\n"
 
-# Create directory to store nvprof outputs
-mkdir nvprof_outputs
 
 echo -e "Running tests on KNN algorithm...\n\n"
-
 
 # --------------------- TEST ON ARTIFICIAL FEATURES --------------------- #
 
@@ -53,10 +50,14 @@ echo -e "Compiling artificial_features.c\n"
 # Compile C source file
 gcc source/tests/artificial_features.c -o seq_artificial_features -lm
 
-echo -e "Running artificial_features.cu, nvprof output redirected to nvprof_outputs/par_artificial_features_nvprof_output.txt\n"
-
-# Run the compiled CUDA code with nvprof and redirect output to txt file
-nvprof ./par_artificial_features > nvprof_outputs/par_artificial_features_nvprof_output.txt 2>&1
+# Run the compiled CUDA code with nvprof if available  and redirect output to txt file, otherwise directly execute it
+if $nvprof_available; then
+    echo -e "Running artificial_features.cu, nvprof output redirected to nvprof_outputs/par_artificial_features_nvprof_output.txt\n"
+    nvprof ./par_artificial_features > nvprof_outputs/par_artificial_features_nvprof_output.txt 2>&1
+else
+    echo -e "Running artificial_features.cu\n"
+    ./par_artificial_features
+fi
 
 echo -e "Running artificial_features.c\n"
 
@@ -67,7 +68,6 @@ echo -e "Running artificial_features.c\n"
 rm par_artificial_features seq_artificial_features
 
 echo -e "Test on artificial data with growing features DONE\n\n\n"
-
 
 # ----------------------------- TEST ON TRAINING SET SIZES ----------------------------- #
 
@@ -83,10 +83,14 @@ echo -e "Compiling artificial_trainSizes.c\n"
 # Compile C source file
 gcc source/tests/artificial_trainSizes.c -o seq_artificial_trainSizes -lm
 
-echo -e "Running artificial_trainSizes.cu, nvprof output redirected to nvprof_outputs/par_artificial_trainSizes_nvprof_output.txt\n"
-
-# Run the compiled CUDA code with nvprof and redirect output to txt file
-nvprof ./par_artificial_trainSizes > nvprof_outputs/par_artificial_trainSizes_nvprof_output.txt 2>&1
+# Run the compiled CUDA code with nvprof if available  and redirect output to txt file, otherwise directly execute it
+if $nvprof_available; then
+    echo -e "Running artificial_trainSizes.cu, nvprof output redirected to nvprof_outputs/par_artificial_trainSizes_nvprof_output.txt\n"
+    nvprof ./par_artificial_trainSizes > nvprof_outputs/par_artificial_trainSizes_nvprof_output.txt 2>&1>&1
+else
+    echo -e "Running artificial_trainSizes.cu\n"
+    ./par_artificial_trainSizes
+fi
 
 echo -e "Running artificial_trainSizes.c\n"
 
@@ -114,10 +118,14 @@ echo -e "Compiling artificial_testSizes.c\n"
 # Compile C source file
 gcc source/tests/artificial_testSizes.c -o seq_artificial_testSizes -lm
 
-echo -e "Running artificial_testSizes.cu, nvprof output redirected to nvprof_outputs/par_artificial_testSizes_nvprof_output.txt\n"
-
-# Run the compiled CUDA code with nvprof and redirect output to txt file
-nvprof ./par_artificial_testSizes > nvprof_outputs/par_artificial_testSizes_nvprof_output.txt 2>&1
+# Run the compiled CUDA code with nvprof if available  and redirect output to txt file, otherwise directly execute it
+if $nvprof_available; then
+    echo -e "Running artificial_testSizes.cu, nvprof output redirected to nvprof_outputs/par_artificial_testSizes_nvprof_output.txt\n"
+    nvprof ./par_artificial_testSizes > nvprof_outputs/par_artificial_testSizes_nvprof_output.txt 2>&1
+else
+    echo -e "Running artificial_testSizes.cu\n"
+    ./par_artificial_testSizes
+fi
 
 echo -e "Running artificial_testSizes.c\n"
 
@@ -144,10 +152,14 @@ echo -e "Compiling artificial_k.c\n"
 # Compile C source file
 gcc source/tests/artificial_k.c -o seq_artificial_k -lm
 
-echo -e "Running artificial_k.cu, nvprof output redirected to nvprof_outputs/par_artificial_k_nvprof_output.txt\n"
-
-# Run the compiled CUDA code with nvprof and redirect output to txt file
-nvprof ./par_artificial_k > nvprof_outputs/par_artificial_k_nvprof_output.txt 2>&1
+# Run the compiled CUDA code with nvprof if available  and redirect output to txt file, otherwise directly execute it
+if $nvprof_available; then
+    echo -e "Running artificial_k.cu, nvprof output redirected to nvprof_outputs/par_artificial_k_nvprof_output.txt\n"
+    nvprof ./par_artificial_k > nvprof_outputs/par_artificial_k_nvprof_output.txt 2>&1
+else
+    echo -e "Running artificial_k.cu\n"
+    ./par_artificial_k 
+fi
 
 echo -e "Running artificial_k.c\n"
 
@@ -169,10 +181,14 @@ echo -e "Compiling artificial_alpha.cu\n"
 # Compile CUDA source file
 nvcc source/tests/artificial_alpha.cu -o par_artificial_alpha
 
-echo -e "Running artificial_alpha.cu, nvprof output redirected to nvprof_outputs/par_artificial_alpha_nvprof_output.txt\n"
-
-# Run the compiled CUDA code with nvprof and redirect output to txt file
-nvprof ./par_artificial_alpha > nvprof_outputs/par_artificial_alpha_nvprof_output.txt 2>&1
+# Run the compiled CUDA code with nvprof if available  and redirect output to txt file, otherwise directly execute it
+if $nvprof_available; then
+    echo -e "Running artificial_alpha.cu, nvprof output redirected to nvprof_outputs/par_artificial_alpha_nvprof_output.txt\n"
+    nvprof ./par_artificial_alpha > nvprof_outputs/par_artificial_alpha_nvprof_output.txt 2>&1
+else
+    echo -e "Running artificial_alpha.cu\n"
+    ./par_artificial_alpha 
+fi
 
 # Clean up 
 rm par_artificial_alpha 
@@ -189,10 +205,14 @@ echo -e "Compiling artificial_blockDims.cu\n"
 # Compile CUDA source file
 nvcc source/tests/artificial_blockDims.cu -o par_artificial_blockDims
 
-echo -e "Running artificial_blockDims.cu, nvprof output redirected to nvprof_outputs/par_artificial_blockDims_nvprof_output.txt\n"
-
-# Run the compiled CUDA code with nvprof and redirect output to txt file
-nvprof ./par_artificial_blockDims > nvprof_outputs/par_artificial_blockDims_nvprof_output.txt 2>&1
+# Run the compiled CUDA code with nvprof if available  and redirect output to txt file, otherwise directly execute it
+if $nvprof_available; then
+    echo -e "Running artificial_blockDims.cu, nvprof output redirected to nvprof_outputs/par_artificial_blockDims_nvprof_output.txt\n"
+    nvprof ./par_artificial_blockDims > nvprof_outputs/par_artificial_blockDims_nvprof_output.txt 2>&1
+else
+    echo -e "Running artificial_blockDims.cu\n"
+    ./par_artificial_blockDims 
+fi
 
 # Clean up 
 rm par_artificial_blockDims
@@ -216,10 +236,14 @@ echo -e "Compiling seq_knn_iris.c\n"
 # Compile C source file
 gcc seq_knn_iris.c -o seq_knn_iris -lm
 
-echo -e "Running par_knn_iris.cu, nvprof output redirected to nvprof_outputs/par_knn_iris_nvprof_output.txt\n"
-
-# Run the compiled CUDA code with nvprof and redirect output to txt file
-nvprof ./par_knn_iris > ../nvprof_outputs/par_knn_iris_nvprof_output.txt 2>&1
+# Run the compiled CUDA code with nvprof if available  and redirect output to txt file, otherwise directly execute it
+if $nvprof_available; then
+    echo -e "Running par_knn_iris.cu, nvprof output redirected to nvprof_outputs/par_knn_iris_nvprof_output.txt\n"
+    nvprof ./par_knn_iris > ../nvprof_outputs/par_knn_iris_nvprof_output.txt 2>&1
+else
+    echo -e "Running par_knn_iris.cu\n"
+    ./par_knn_iris 
+fi
 
 echo -e "Running seq_knn_iris.c\n"
 
@@ -252,10 +276,14 @@ echo -e "Compiling seq_knn_diabetes.c\n"
 # Compile C source file
 gcc seq_knn_diabetes.c -o seq_knn_diabetes -lm
 
-echo -e "Running par_knn_diabetes.cu, nvprof output redirected to nvprof_outputs/par_knn_diabetes_nvprof_output.txt\n"
-
-# Run the compiled CUDA code with nvprof and redirect output to txt file
-nvprof ./par_knn_diabetes > ../nvprof_outputs/par_knn_diabetes_nvprof_output.txt 2>&1
+# Run the compiled CUDA code with nvprof if available  and redirect output to txt file, otherwise directly execute it
+if $nvprof_available; then
+    echo -e "Running par_knn_diabetes.cu, nvprof output redirected to nvprof_outputs/par_knn_diabetes_nvprof_output.txt\n"
+    nvprof ./par_knn_diabetes > ../nvprof_outputs/par_knn_diabetes_nvprof_output.txt 2>&1
+else
+    echo -e "Running par_knn_diabetes.cu\n"
+    ./par_knn_diabetes 
+fi
 
 echo -e "Running seq_knn_diabetes.c\n"
 
@@ -296,7 +324,9 @@ fi
 
 
 # Move direcotires in result directory
-mv ./nvprof_outputs "./$dir_name/"
+if $nvprof_available; then
+    mv ./nvprof_outputs "./$dir_name/"
+fi
 mv ./sw_hw_info "./$dir_name/"
 mv ./iris "./$dir_name/"
 mv ./diabetes "./$dir_name/"
