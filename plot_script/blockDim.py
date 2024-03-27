@@ -39,6 +39,6 @@ plt.grid(True, which="both", linestyle='--')
 plt.xticks([2, 4, 8, 16, 32])
 
 # Save the plot in a higher resolution and in a different format 
-plt.savefig('blockDim.png', dpi=300, bbox_inches='tight', format='png')
+plt.savefig('blockDim.jpg', dpi=300, bbox_inches='tight', format='jpg')
 
 

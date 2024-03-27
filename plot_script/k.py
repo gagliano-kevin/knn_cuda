@@ -44,6 +44,6 @@ plt.grid(True, which="both", linestyle='--')
 plt.xticks(range(5, 51, 5))
 
 # Save the plot in a higher resolution and in a different format 
-plt.savefig('k.png', dpi=300, bbox_inches='tight', format='png')
+plt.savefig('k.jpg', dpi=300, bbox_inches='tight', format='jpg')
 
 

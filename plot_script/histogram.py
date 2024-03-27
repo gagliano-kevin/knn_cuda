@@ -47,7 +47,5 @@ for gpu, ax in zip(total_time_per_gpu.index, axs):
 plt.tight_layout()  # Adjust layout to prevent overlap
 
 # Save the plot in a higher resolution and in a different format 
-plt.savefig('histo_execution_times_plot.png', dpi=300, bbox_inches='tight', format='png')
+plt.savefig('histo_execution_times_plot.jpg', dpi=300, bbox_inches='tight', format='jpg')
 
-# Show plot
-#plt.show()
