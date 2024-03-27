@@ -1,0 +1,350 @@
+############################################################################################################
+                                         Execution informations
+############################################################################################################
+
+Execution times over 5 runs:	0.000483	0.000251	0.000256	0.000253	0.000250	
+Average execution time: 0.000299
+Variance of execution times: 0.000000
+
+Kernel launch information:
+Grid dimension in knnDistances kernel: 32 , 4
+Block dimension in knnDistances kernel: 32 , 32
+Grid dimension in knn kernel: 100 , 1
+Block dimension in knn kernel: 32 , 1
+Number of workers: 32
+Shared workers (threads that initially operate in shared memory partitions): 16
+Factor alpha: 2
+Factor beta: 4
+Shared memory used: 5760 bytes 	<---->	 Max shared memory per block: 49152 bytes
+knnDistances execution time: 0.000030 sec
+knn execution time: 0.000268 sec
+Sum of kernel execution times: 0.000299 sec
+
+Data information:
+Training data size: 1000
+Test data size: 100
+Number of features: 10
+
+KNN Parameters:
+k: 10
+Distance Metric: Euclidean
+
+Number of prediction errors: 0
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+############################################################################################################
+                                         Execution informations
+############################################################################################################
+
+Execution times over 5 runs:	0.000792	0.000331	0.000324	0.000326	0.000325	
+Average execution time: 0.000420
+Variance of execution times: 0.000000
+
+Kernel launch information:
+Grid dimension in knnDistances kernel: 63 , 4
+Block dimension in knnDistances kernel: 32 , 32
+Grid dimension in knn kernel: 100 , 1
+Block dimension in knn kernel: 64 , 1
+Number of workers: 64
+Shared workers (threads that initially operate in shared memory partitions): 32
+Factor alpha: 2
+Factor beta: 4
+Shared memory used: 11520 bytes 	<---->	 Max shared memory per block: 49152 bytes
+knnDistances execution time: 0.000053 sec
+knn execution time: 0.000366 sec
+Sum of kernel execution times: 0.000420 sec
+
+Data information:
+Training data size: 2000
+Test data size: 100
+Number of features: 10
+
+KNN Parameters:
+k: 10
+Distance Metric: Euclidean
+
+Number of prediction errors: 0
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+############################################################################################################
+                                         Execution informations
+############################################################################################################
+
+Execution times over 5 runs:	0.001333	0.000520	0.000517	0.000523	0.000514	
+Average execution time: 0.000681
+Variance of execution times: 0.000000
+
+Kernel launch information:
+Grid dimension in knnDistances kernel: 94 , 4
+Block dimension in knnDistances kernel: 32 , 32
+Grid dimension in knn kernel: 100 , 1
+Block dimension in knn kernel: 128 , 1
+Number of workers: 128
+Shared workers (threads that initially operate in shared memory partitions): 64
+Factor alpha: 2
+Factor beta: 4
+Shared memory used: 23040 bytes 	<---->	 Max shared memory per block: 49152 bytes
+knnDistances execution time: 0.000072 sec
+knn execution time: 0.000609 sec
+Sum of kernel execution times: 0.000681 sec
+
+Data information:
+Training data size: 3000
+Test data size: 100
+Number of features: 10
+
+KNN Parameters:
+k: 10
+Distance Metric: Euclidean
+
+Number of prediction errors: 0
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+############################################################################################################
+                                         Execution informations
+############################################################################################################
+
+Execution times over 5 runs:	0.001663	0.000547	0.000548	0.000547	0.000550	
+Average execution time: 0.000771
+Variance of execution times: 0.000000
+
+Kernel launch information:
+Grid dimension in knnDistances kernel: 125 , 4
+Block dimension in knnDistances kernel: 32 , 32
+Grid dimension in knn kernel: 100 , 1
+Block dimension in knn kernel: 128 , 1
+Number of workers: 128
+Shared workers (threads that initially operate in shared memory partitions): 64
+Factor alpha: 2
+Factor beta: 4
+Shared memory used: 23040 bytes 	<---->	 Max shared memory per block: 49152 bytes
+knnDistances execution time: 0.000093 sec
+knn execution time: 0.000678 sec
+Sum of kernel execution times: 0.000771 sec
+
+Data information:
+Training data size: 4000
+Test data size: 100
+Number of features: 10
+
+KNN Parameters:
+k: 10
+Distance Metric: Euclidean
+
+Number of prediction errors: 0
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+############################################################################################################
+                                         Execution informations
+############################################################################################################
+
+Execution times over 5 runs:	0.002272	0.000616	0.000614	0.000616	0.000612	
+Average execution time: 0.000946
+Variance of execution times: 0.000000
+
+Kernel launch information:
+Grid dimension in knnDistances kernel: 157 , 4
+Block dimension in knnDistances kernel: 32 , 32
+Grid dimension in knn kernel: 100 , 1
+Block dimension in knn kernel: 128 , 1
+Number of workers: 128
+Shared workers (threads that initially operate in shared memory partitions): 64
+Factor alpha: 2
+Factor beta: 4
+Shared memory used: 23040 bytes 	<---->	 Max shared memory per block: 49152 bytes
+knnDistances execution time: 0.000117 sec
+knn execution time: 0.000829 sec
+Sum of kernel execution times: 0.000946 sec
+
+Data information:
+Training data size: 5000
+Test data size: 100
+Number of features: 10
+
+KNN Parameters:
+k: 10
+Distance Metric: Euclidean
+
+Number of prediction errors: 0
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+############################################################################################################
+                                         Execution informations
+############################################################################################################
+
+Execution times over 5 runs:	0.003882	0.001795	0.001788	0.001783	0.001793	
+Average execution time: 0.002208
+Variance of execution times: 0.000001
+
+Kernel launch information:
+Grid dimension in knnDistances kernel: 188 , 4
+Block dimension in knnDistances kernel: 32 , 32
+Grid dimension in knn kernel: 100 , 1
+Block dimension in knn kernel: 256 , 1
+Number of workers: 256
+Shared workers (threads that initially operate in shared memory partitions): 128
+Factor alpha: 2
+Factor beta: 4
+Shared memory used: 46080 bytes 	<---->	 Max shared memory per block: 49152 bytes
+knnDistances execution time: 0.000137 sec
+knn execution time: 0.002071 sec
+Sum of kernel execution times: 0.002208 sec
+
+Data information:
+Training data size: 6000
+Test data size: 100
+Number of features: 10
+
+KNN Parameters:
+k: 10
+Distance Metric: Euclidean
+
+Number of prediction errors: 0
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+############################################################################################################
+                                         Execution informations
+############################################################################################################
+
+Execution times over 5 runs:	0.003887	0.001585	0.001582	0.001593	0.001593	
+Average execution time: 0.002048
+Variance of execution times: 0.000001
+
+Kernel launch information:
+Grid dimension in knnDistances kernel: 219 , 4
+Block dimension in knnDistances kernel: 32 , 32
+Grid dimension in knn kernel: 100 , 1
+Block dimension in knn kernel: 256 , 1
+Number of workers: 256
+Shared workers (threads that initially operate in shared memory partitions): 128
+Factor alpha: 2
+Factor beta: 4
+Shared memory used: 46080 bytes 	<---->	 Max shared memory per block: 49152 bytes
+knnDistances execution time: 0.000160 sec
+knn execution time: 0.001888 sec
+Sum of kernel execution times: 0.002048 sec
+
+Data information:
+Training data size: 7000
+Test data size: 100
+Number of features: 10
+
+KNN Parameters:
+k: 10
+Distance Metric: Euclidean
+
+Number of prediction errors: 0
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+############################################################################################################
+                                         Execution informations
+############################################################################################################
+
+Execution times over 5 runs:	0.004036	0.001426	0.001429	0.001414	0.001414	
+Average execution time: 0.001944
+Variance of execution times: 0.000001
+
+Kernel launch information:
+Grid dimension in knnDistances kernel: 250 , 4
+Block dimension in knnDistances kernel: 32 , 32
+Grid dimension in knn kernel: 100 , 1
+Block dimension in knn kernel: 256 , 1
+Number of workers: 256
+Shared workers (threads that initially operate in shared memory partitions): 128
+Factor alpha: 2
+Factor beta: 4
+Shared memory used: 46080 bytes 	<---->	 Max shared memory per block: 49152 bytes
+knnDistances execution time: 0.000181 sec
+knn execution time: 0.001763 sec
+Sum of kernel execution times: 0.001944 sec
+
+Data information:
+Training data size: 8000
+Test data size: 100
+Number of features: 10
+
+KNN Parameters:
+k: 10
+Distance Metric: Euclidean
+
+Number of prediction errors: 0
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+############################################################################################################
+                                         Execution informations
+############################################################################################################
+
+Execution times over 5 runs:	0.004338	0.001346	0.001374	0.001346	0.001346	
+Average execution time: 0.001950
+Variance of execution times: 0.000001
+
+Kernel launch information:
+Grid dimension in knnDistances kernel: 282 , 4
+Block dimension in knnDistances kernel: 32 , 32
+Grid dimension in knn kernel: 100 , 1
+Block dimension in knn kernel: 256 , 1
+Number of workers: 256
+Shared workers (threads that initially operate in shared memory partitions): 128
+Factor alpha: 2
+Factor beta: 4
+Shared memory used: 46080 bytes 	<---->	 Max shared memory per block: 49152 bytes
+knnDistances execution time: 0.000204 sec
+knn execution time: 0.001746 sec
+Sum of kernel execution times: 0.001950 sec
+
+Data information:
+Training data size: 9000
+Test data size: 100
+Number of features: 10
+
+KNN Parameters:
+k: 10
+Distance Metric: Euclidean
+
+Number of prediction errors: 0
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+############################################################################################################
+                                         Execution informations
+############################################################################################################
+
+Execution times over 5 runs:	0.004312	0.001380	0.001374	0.001390	0.001382	
+Average execution time: 0.001968
+Variance of execution times: 0.000001
+
+Kernel launch information:
+Grid dimension in knnDistances kernel: 313 , 4
+Block dimension in knnDistances kernel: 32 , 32
+Grid dimension in knn kernel: 100 , 1
+Block dimension in knn kernel: 256 , 1
+Number of workers: 256
+Shared workers (threads that initially operate in shared memory partitions): 128
+Factor alpha: 2
+Factor beta: 4
+Shared memory used: 46080 bytes 	<---->	 Max shared memory per block: 49152 bytes
+knnDistances execution time: 0.000226 sec
+knn execution time: 0.001741 sec
+Sum of kernel execution times: 0.001968 sec
+
+Data information:
+Training data size: 10000
+Test data size: 100
+Number of features: 10
+
+KNN Parameters:
+k: 10
+Distance Metric: Euclidean
+
+Number of prediction errors: 0
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+

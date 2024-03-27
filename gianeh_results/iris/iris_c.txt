@@ -1,0 +1,24 @@
+############################################################################################################
+                                         Execution informations
+############################################################################################################
+
+Execution times over 5 runs:	0.002023	0.002102	0.002833	0.002117	0.002031	
+Average execution time: 0.002221
+Variance of execution times: 0.000000
+
+knn execution information:
+knn execution time: 0.002221 sec
+
+Data information:
+Training data size: 150
+Test data size: 50
+Number of features: 4
+
+KNN Parameters:
+k: 10
+Distance Metric: Euclidean
+
+Number of prediction errors: 1
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
