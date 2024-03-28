@@ -26,7 +26,7 @@ color_map = {
     'knn (97.37%)': '#FF6347',           # Tomato
     'memcpy HtoD (0.30%)': '#32CD32',  # Lime Green
     'memcpy DtoH (0.08%)': '#4169E1',  # Royal Blue
-    'memset (0.29%)': '#FFD700',         # Gold
+    'memset (0.29%)': '#FFAA00',         # Orange
 }
 
 
