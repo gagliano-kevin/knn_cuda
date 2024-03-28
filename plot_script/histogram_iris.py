@@ -4,11 +4,11 @@ import matplotlib.pyplot as plt
 # Sample data 
 # Format: (GPU, Kernel/API call, %Time)
 data = [
-    (1, 'knnDistances', 1.96),
-    (1, 'knn', 97.37),
-    (1, 'CUDA memcpy HtoD', 0.30),
-    (1, 'CUDA memcpy DtoH', 0.08),
-    (1, 'CUDA memset', 0.29),
+    (1, 'knnDistances (1.96%)', 1.96),
+    (1, 'knn (97.37%)', 97.37),
+    (1, 'memcpy HtoD (0.30%)', 0.30),
+    (1, 'memcpy DtoH (0.08%)', 0.08),
+    (1, 'memset (0.29%)', 0.29),
 ]
 
 # Convert data to a DataFrame
@@ -22,11 +22,11 @@ df['Percentage'] = df.groupby('GPU')['Time'].apply(lambda x: (x / x.sum()) * 100
 
 # Define colors for each operation
 color_map = {
-    'knnDistances': '#4682B4',  # Steel Blue
-    'knn': '#FF6347',           # Tomato
-    'CUDA memcpy HtoD': '#32CD32',  # Lime Green
-    'CUDA memcpy DtoH': '#4169E1',  # Royal Blue
-    'CUDA memset': '#FFD700',         # Gold
+    'knnDistances (1.96%)': '#4682B4',  # Steel Blue
+    'knn (97.37%)': '#FF6347',           # Tomato
+    'memcpy HtoD (0.30%)': '#32CD32',  # Lime Green
+    'memcpy DtoH (0.08%)': '#4169E1',  # Royal Blue
+    'memset (0.29%)': '#FFD700',         # Gold
 }
 
 
