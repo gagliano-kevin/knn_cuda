@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Sample data 
-# Format: (GPU, Kernel/API, Time)
+# Format: (GPU, Kernel/API call, %Time)
 data = [
     (0, 'kernel1', 40),
     (0, 'kernel2', 30),

@@ -14,10 +14,10 @@ def read_execution_times(file_path):
 
     return gpu_times
 
-# Read data from the first set of files
+# Read data from the first file
 gpu_times1 = read_execution_times('../kevin_results/artificial_alpha/artificial_alpha_csv.txt')
 
-# Read data from the second set of files
+# Read data from the second file
 gpu_times2 = read_execution_times('../gianeh_results/artificial_alpha/artificial_alpha_csv.txt')
 
 # Plotting  
