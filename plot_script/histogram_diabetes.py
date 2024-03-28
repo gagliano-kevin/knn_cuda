@@ -4,14 +4,11 @@ import matplotlib.pyplot as plt
 # Sample data 
 # Format: (GPU, Kernel/API call, %Time)
 data = [
-    (0, 'kernel1', 40),
-    (0, 'kernel2', 30),
-    (0, 'cudaMemcpy', 20),
-    (0, 'api', 10),
-    (1, 'kernel1', 30),
-    (1, 'kernel2', 35),
-    (1, 'cudaMemcpy', 25),
-    (1, 'api', 10),
+    (1, 'knnDistances', 8.68),
+    (1, 'knn', 89.83),
+    (1, 'CUDA memcpy HtoD', 1.36),
+    (1, 'CUDA memcpy DtoH', 0.01),
+    (1, 'CUDA memset', 0.12),
 ]
 
 # Convert data to a DataFrame
@@ -25,11 +22,13 @@ df['Percentage'] = df.groupby('GPU')['Time'].apply(lambda x: (x / x.sum()) * 100
 
 # Define colors for each operation
 color_map = {
-    'kernel1': 'skyblue',
-    'kernel2': 'salmon',
-    'cudaMemcpy': 'lightgreen',
-    'api': 'gold',
+    'knnDistances': '#4682B4',  # Steel Blue
+    'knn': '#FF6347',           # Tomato
+    'CUDA memcpy HtoD': '#32CD32',  # Lime Green
+    'CUDA memcpy DtoH': '#4169E1',  # Royal Blue
+    'CUDA memset': '#FFD700',         # Gold
 }
+
 
 # Plot histograms
 fig, axs = plt.subplots(len(total_time_per_gpu), 1, figsize=(10, 6))
@@ -47,5 +46,5 @@ for gpu, ax in zip(total_time_per_gpu.index, axs):
 plt.tight_layout()  # Adjust layout to prevent overlap
 
 # Save the plot in a higher resolution and in a different format 
-plt.savefig('histo_execution_times_plot.jpg', dpi=300, bbox_inches='tight', format='jpg')
+plt.savefig('histogram_diabetes.jpg', dpi=300, bbox_inches='tight', format='jpg')
 
