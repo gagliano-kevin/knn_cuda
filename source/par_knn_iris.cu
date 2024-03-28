@@ -122,7 +122,7 @@ int main(int argc, char** argv) {
 
     int maxSharedMemory = getSharedMemoryPerBlock(device);                                                  // Maximum shared memory per block
     int itemSize = sizeof(double) + sizeof(int);                                                            // Size of each item in shared memory (distance + index)
-    int workers = maxSharedMemory/(k * itemSize * (1.5 + 1/alpha));                                         // Default number of threads in a block (maxization of shared memory usage)
+    int workers = maxSharedMemory/(k * itemSize * (1.5 + (double)1/alpha));                                 // Default number of threads in a block (maxization of shared memory usage)
     workers = nearestPowerOfTwo(workers);                                                                   // Round the workers number to the nearest power of two
     if (workers > (int)trainSize/(alpha*k)){                                                                // In case of too many workers (small dataset)
         workers = nearestPowerOfTwo((int)trainSize/(alpha*k));                                              // Set new default value  
