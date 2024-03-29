@@ -77,7 +77,7 @@ __device__ void bubbleSort(double *distances, int *indexes, int startIdx, int en
 }
 
 
-// Kernel to compute k-nearest neighbors
+// Kernel to compute k-nearest neighbors (extern "C" is used to avoid name mangling in compiled code, needed due to the use of new and delete operators in the kernel)
 extern "C" __global__ void knn(double *distances, int trainSize, int *indexes, int k, int *predictions, int *trainLabels, int sharedMemoryIdx, int alpha, int beta, int classes) {      // exter "C" is used to avoid name mangling
     int row = blockIdx.x;                                                       // Each block is responsible for a subset of distances array (relative to a test example)
     int portion = (int)trainSize / blockDim.x;                                  // Portion of the data (distances array) that each thread is responsible for
