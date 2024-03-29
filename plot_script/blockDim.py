@@ -25,7 +25,7 @@ plt.plot([2, 4, 8, 16, 32], gpu_times1, label='GPU Setup 1')
 plt.plot([2, 4, 8, 16, 32], gpu_times2, label='GPU Setup 2')
 
 # Adding labels and title
-plt.xlabel('Block Dimension')
+plt.xlabel('Block Dimension (blockDim.x = blockDim.y)')
 plt.ylabel('Execution Time (s)')
 plt.title('Execution Times for Test on Block Dimension')
 
