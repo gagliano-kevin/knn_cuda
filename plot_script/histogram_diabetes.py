@@ -1,14 +1,14 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# Sample data 
+# Data from: /knn_cuda/kevin_results/nvprof_outputs/single_iteration_profiling/nvprof_iris_1_iter.txt
 # Format: (GPU, Kernel/API call, %Time)
 data = [
-    (1, 'knnDistances (8.68%)', 8.68),
-    (1, 'knn (89.83%)', 89.83),
-    (1, 'memcpy HtoD (1.36%)', 1.36),
-    (1, 'memcpy DtoH (0.01%)', 0.01),
-    (1, 'memset (0.12%)', 0.12),
+    (1, 'knnDistances (4.89%)', 4.89),
+    (1, 'knn (90.79%)', 90.79),
+    (1, 'memcpy HtoD (3.96%)', 3.96),
+    (1, 'memcpy DtoH (0.02%)', 0.02),
+    (1, 'memset (0.34%)', 0.34),
 ]
 
 # Convert data to a DataFrame
@@ -22,11 +22,11 @@ df['Percentage'] = df.groupby('GPU')['Time'].apply(lambda x: (x / x.sum()) * 100
 
 # Define colors for each operation
 color_map = {
-    'knnDistances (8.68%)': '#4682B4',          # Steel Blue
-    'knn (89.83%)': '#FF6347',                  # Tomato
-    'memcpy HtoD (1.36%)': '#32CD32',           # Lime Green
-    'memcpy DtoH (0.01%)': '#4169E1',           # Royal Blue
-    'memset (0.12%)': '#FFAA00',                # Orange
+    'knnDistances (4.89%)': '#4682B4',          # Steel Blue
+    'knn (90.79%)': '#FF6347',                  # Tomato
+    'memcpy HtoD (3.96%)': '#32CD32',           # Lime Green
+    'memcpy DtoH (0.02%)': '#4169E1',           # Royal Blue
+    'memset (0.34%)': '#FFAA00',                # Orange
 }
 
 # Plot histograms
