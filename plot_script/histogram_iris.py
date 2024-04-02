@@ -17,7 +17,7 @@ df = pd.DataFrame(data, columns=['GPU', 'Operation', 'Time'])
 # Calculate total time per GPU
 total_time_per_gpu = df.groupby('GPU')['Time'].sum()
 
-# Calculate percentage time per operation per GPU
+# Calculate percentage time per operation 
 df['Percentage'] = df.groupby('GPU')['Time'].apply(lambda x: (x / x.sum()) * 100).reset_index(drop=True)
 
 # Define colors for each operation
